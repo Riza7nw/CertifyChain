@@ -10,6 +10,7 @@ const helmet = require("helmet");
 const certificateRoutes = require("./routes/certificate.routes");
 const authRoutes = require("./routes/auth.routes");
 const v1AuthRoutes = require("./routes/v1.auth.routes");
+const v1OrgRoutes = require("./routes/v1.org.routes");
 const auditRoutes = require("./routes/audit.routes");
 const institutionRoutes = require("./routes/institution.routes");
 const statsRoutes = require("./routes/stats.routes");
@@ -40,6 +41,7 @@ app.get(
 
 // --- Routes ---
 app.use("/api/v1/auth", v1AuthRoutes);    // multi-tenant auth (Langkah 2)
+app.use("/api/v1", v1OrgRoutes);          // endpoint org-scoped (tenant isolation)
 app.use("/api/auth", authRoutes);         // login admin tunggal lama (transisi)
 app.use("/api", institutionRoutes);       // institusi + dashboard + penerbitan (multi-institusi)
 app.use("/api", certificateRoutes);       // verify/get/qr (publik)
