@@ -3,12 +3,12 @@
 
 const blockchainService = require("../services/blockchain.service");
 const qrService = require("../services/qr.service");
-const audit = require("../services/audit.service");
+const certificateService = require("../services/certificate.service");
 const storage = require("../storage");
 const db = require("../db");
 const asyncHandler = require("../utils/asyncHandler");
 const AppError = require("../utils/AppError");
-const { generateDataHash, generateCertificateId, isValidBytes32 } = require("../utils/hash");
+const { isValidBytes32 } = require("../utils/hash");
 
 /**
  * POST /api/institutions/:id/certificates   (multipart/form-data, JWT admin)
@@ -34,70 +34,22 @@ const issueCertificate = asyncHandler(async (req, res) => {
     throw new AppError("File sertifikat (field 'file') wajib diunggah.", 400, "VALIDATION_ERROR");
   }
 
-  // 1. Simpan file ke IPFS (atau provider lokal saat dev) -> fileCid
-  const stored = await storage.add(req.file.buffer, req.file.originalname);
-
-  // 2. Metadata kanonik -> dataHash (urutan field tetap agar hash deterministik)
-  const canonical = JSON.stringify({
+  // Logika inti dipindah ke certificate.service (dipakai juga endpoint v1).
+  const result = await certificateService.issueToInstitution({
     institutionId,
-    recipientName: recipientName.trim(),
-    fileCid: stored.cid,
+    recipientName,
+    data,
+    fileBuffer: req.file.buffer,
     fileName: req.file.originalname,
     mimeType: req.file.mimetype,
-    extra: data ?? null,
-  });
-  const dataHash = generateDataHash(canonical);
-  const certificateId = generateCertificateId();
-
-  // 3. Catat ke blockchain
-  const receipt = await blockchainService.issueCertificate(
-    institutionId,
-    certificateId,
-    dataHash,
-    stored.cid
-  );
-
-  // 4. Read-model (DB) untuk query dashboard cepat
-  await db.certificates.upsert({
-    certificateId,
-    institutionId,
-    recipientName: recipientName.trim(),
-    fileCid: stored.cid,
-    dataHash,
-    status: "valid",
-    txHash: receipt.txHash,
-    blockNumber: receipt.blockNumber,
-    issuedAt: new Date().toISOString(),
-  });
-
-  audit.record({
-    type: "CERTIFICATE_ISSUED",
-    admin: req.user?.username,
+    issuedByLabel: req.user?.username,
     ip: req.ip,
-    institutionId,
-    certificateId,
-    fileCid: stored.cid,
-    dataHash,
-    txHash: receipt.txHash,
   });
-
-  const verificationUrl = qrService.buildVerificationUrl(certificateId);
-  const qrCode = await qrService.generateQrDataUrl(verificationUrl);
 
   res.status(201).json({
     success: true,
     message: "Sertifikat berhasil diterbitkan.",
-    data: {
-      certificateId,
-      institutionId,
-      recipientName: recipientName.trim(),
-      fileCid: stored.cid,
-      fileUrl: storage.gatewayUrl(stored.cid),
-      dataHash,
-      verificationUrl,
-      qrCode,
-      transaction: receipt,
-    },
+    data: result,
   });
 });
 

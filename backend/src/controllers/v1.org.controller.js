@@ -5,6 +5,8 @@
 const prisma = require("../db/prismaClient");
 const db = require("../db");
 const storage = require("../storage");
+const blockchainService = require("../services/blockchain.service");
+const certificateService = require("../services/certificate.service");
 const asyncHandler = require("../utils/asyncHandler");
 const AppError = require("../utils/AppError");
 
@@ -105,4 +107,79 @@ const getOrgStats = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { listMyOrgs, getOrgCertificates, getOrgStats };
+/**
+ * POST /api/v1/orgs/:orgId/provision  (platform admin)
+ * Daftarkan institusi org ke blockchain (admin on-chain = wallet backend agar bisa
+ * menerbitkan), lalu tautkan onchain_institution_id. Transaksi on-chain (butuh gas).
+ */
+const provisionOrg = asyncHandler(async (req, res) => {
+  const orgId = Number(req.params.orgId);
+  const org = await loadOrg(orgId);
+  if (org.onchain_institution_id != null) {
+    throw new AppError("Organisasi sudah diprovision on-chain.", 409, "ALREADY_PROVISIONED");
+  }
+
+  const { metadataCid } = req.body || {};
+  // admin institusi = wallet backend (signer custodial) -> backend bisa menerbitkan.
+  const result = await blockchainService.registerInstitution(
+    blockchainService.walletAddress,
+    org.name,
+    metadataCid || ""
+  );
+
+  await prisma.organizations.update({
+    where: { id: orgId },
+    data: { onchain_institution_id: result.institutionId },
+  });
+  // Tampilkan langsung di read-model (indexer juga akan merekonsiliasi dari event).
+  await db.institutions.upsert({
+    id: result.institutionId,
+    name: org.name,
+    metadataCid: metadataCid || null,
+    adminAddress: blockchainService.walletAddress,
+    active: true,
+    txHash: result.txHash,
+    blockNumber: result.blockNumber,
+  });
+
+  res.status(201).json({
+    success: true,
+    message: "Organisasi terprovision on-chain.",
+    data: { orgId, onchainInstitutionId: result.institutionId, txHash: result.txHash },
+  });
+});
+
+/**
+ * POST /api/v1/orgs/:orgId/certificates  (OrgAdmin/Issuer, multipart + file)
+ * Terbitkan sertifikat atas nama institusi org (tenant-scoped).
+ */
+const issueOrgCertificate = asyncHandler(async (req, res) => {
+  const orgId = Number(req.params.orgId);
+  const org = await loadOrg(orgId);
+
+  const { recipientName, data } = req.body || {};
+  if (!recipientName || typeof recipientName !== "string") {
+    throw new AppError("Field 'recipientName' wajib diisi.", 400, "VALIDATION_ERROR");
+  }
+  if (!req.file) {
+    throw new AppError("File sertifikat (field 'file') wajib diunggah.", 400, "VALIDATION_ERROR");
+  }
+  if (org.onchain_institution_id == null) {
+    throw new AppError("Organisasi belum diprovision on-chain.", 409, "NOT_PROVISIONED");
+  }
+
+  const result = await certificateService.issueToInstitution({
+    institutionId: org.onchain_institution_id,
+    recipientName,
+    data,
+    fileBuffer: req.file.buffer,
+    fileName: req.file.originalname,
+    mimeType: req.file.mimetype,
+    issuedByLabel: req.authUser.email,
+    ip: req.ip,
+  });
+
+  res.status(201).json({ success: true, message: "Sertifikat berhasil diterbitkan.", data: result });
+});
+
+module.exports = { listMyOrgs, getOrgCertificates, getOrgStats, provisionOrg, issueOrgCertificate };

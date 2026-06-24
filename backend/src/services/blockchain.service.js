@@ -168,6 +168,7 @@ async function getStatus() {
 module.exports = {
   contract, // diekspor untuk indexer (read-only event)
   provider,
+  walletAddress: wallet.address, // alamat signer backend (custodial)
   registerInstitution,
   issueCertificate,
   verifyCertificate,
