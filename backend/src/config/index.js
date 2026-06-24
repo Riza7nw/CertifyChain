@@ -45,8 +45,12 @@ const config = {
 
   // --- Database (read-model untuk dashboard & statistik) ---
   // Driver: "sqlite" (node:sqlite, default) atau "postgres" (Prisma).
+  // "postgresql" diterima sebagai alias "postgres".
   // Repository interface sama (async) untuk keduanya -> swappable.
-  dbDriver: (process.env.DB_DRIVER || "sqlite").toLowerCase(),
+  dbDriver: (() => {
+    const d = (process.env.DB_DRIVER || "sqlite").toLowerCase();
+    return d === "postgresql" ? "postgres" : d;
+  })(),
   dbPath: process.env.DB_PATH || path.join(__dirname, "..", "..", "data", "certifychain.db"),
 
   // --- Penyimpanan file (IPFS) ---
