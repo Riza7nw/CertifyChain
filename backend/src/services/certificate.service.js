@@ -22,7 +22,7 @@ const { generateDataHash, generateCertificateId } = require("../utils/hash");
  * @param {string} [p.ip]
  * @returns {Promise<object>} data sertifikat (certId, cid, hash, qr, tx)
  */
-async function issueToInstitution({ institutionId, recipientName, data, fileBuffer, fileName, mimeType, issuedByLabel, ip }) {
+async function issueToInstitution({ institutionId, recipientName, recipientEmail, data, fileBuffer, fileName, mimeType, issuedByLabel, ip }) {
   // 1. Unggah file -> IPFS
   const stored = await storage.add(fileBuffer, fileName);
 
@@ -46,6 +46,7 @@ async function issueToInstitution({ institutionId, recipientName, data, fileBuff
     certificateId,
     institutionId,
     recipientName: recipientName.trim(),
+    recipientEmail: recipientEmail ? String(recipientEmail).trim().toLowerCase() : null,
     fileCid: stored.cid,
     dataHash,
     status: "valid",

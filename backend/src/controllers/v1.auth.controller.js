@@ -46,25 +46,35 @@ const register = asyncHandler(async (req, res) => {
   const { email, password, name, orgName } = req.body || {};
   if (!email || !EMAIL_RE.test(email)) throw new AppError("Email tidak valid.", 400, "VALIDATION_ERROR");
   if (!password || password.length < 8) throw new AppError("Password minimal 8 karakter.", 400, "VALIDATION_ERROR");
-  if (!orgName || !String(orgName).trim()) throw new AppError("orgName wajib diisi.", 400, "VALIDATION_ERROR");
-
+  // orgName OPSIONAL (Phase 7):
+  //  - ada  -> signup INSTITUSI (user + org + membership OrgAdmin)
+  //  - kosong -> signup PENERIMA (user saja, role 'user' default, tanpa org)
   if (await prisma.users.findUnique({ where: { email } })) {
     throw new AppError("Email sudah terdaftar.", 409, "EMAIL_EXISTS");
   }
 
-  // Slug unik
-  const base = slugify(orgName);
-  let slug = base;
-  for (let i = 1; await prisma.organizations.findUnique({ where: { slug } }); i++) slug = `${base}-${i}`;
-
   const password_hash = await authService.hashPassword(password);
-  const { user, org } = await prisma.$transaction(async (tx) => {
-    const u = await tx.users.create({ data: { email, password_hash, name: name ?? null } });
-    const o = await tx.organizations.create({ data: { name: String(orgName).trim(), slug } });
-    await tx.memberships.create({ data: { user_id: u.id, organization_id: o.id, role: "OrgAdmin" } });
-    return { user: u, org: o };
-  });
+  const wantsOrg = orgName && String(orgName).trim();
 
+  let user;
+  let org = null;
+  if (wantsOrg) {
+    const base = slugify(orgName);
+    let slug = base;
+    for (let i = 1; await prisma.organizations.findUnique({ where: { slug } }); i++) slug = `${base}-${i}`;
+    const r = await prisma.$transaction(async (tx) => {
+      const u = await tx.users.create({ data: { email, password_hash, name: name ?? null } });
+      const o = await tx.organizations.create({ data: { name: String(orgName).trim(), slug } });
+      await tx.memberships.create({ data: { user_id: u.id, organization_id: o.id, role: "OrgAdmin" } });
+      return { u, o };
+    });
+    user = r.u;
+    org = r.o;
+  } else {
+    user = await prisma.users.create({ data: { email, password_hash, name: name ?? null } });
+  }
+
+  // TODO (slice berikut): kirim token verifikasi email.
   const accessToken = authService.signAccessToken(user);
   const refreshToken = await authService.issueRefreshToken(user.id);
   setRefreshCookie(res, refreshToken);
@@ -74,8 +84,8 @@ const register = asyncHandler(async (req, res) => {
     data: {
       accessToken,
       refreshToken, // juga di-set sebagai cookie httpOnly; klien browser pakai cookie
-      user: { id: user.id, email: user.email },
-      org: { id: org.id, slug: org.slug, name: org.name, role: "OrgAdmin" },
+      user: { id: user.id, email: user.email, role: user.role },
+      org: org ? { id: org.id, slug: org.slug, name: org.name, role: "OrgAdmin" } : null,
     },
   });
 });

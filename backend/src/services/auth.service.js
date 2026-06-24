@@ -22,7 +22,8 @@ function verifyPassword(pw, hash) {
 // Access token: payload minimal (sub=userId, pa=isPlatformAdmin). Memberships
 // dimuat dari DB saat request (selalu up-to-date, tidak ikut di token).
 function signAccessToken(user) {
-  return jwt.sign({ email: user.email, pa: user.is_platform_admin }, config.jwtSecret, {
+  const role = user.role || (user.is_platform_admin ? "admin" : "user");
+  return jwt.sign({ email: user.email, role }, config.jwtSecret, {
     subject: String(user.id),
     expiresIn: config.accessTokenTtl,
   });

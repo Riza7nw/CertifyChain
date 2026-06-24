@@ -8,6 +8,7 @@ module.exports = (prisma) => ({
         certificate_id: c.certificateId,
         institution_id: c.institutionId,
         recipient_name: c.recipientName ?? null,
+        recipient_email: c.recipientEmail ?? null,
         file_cid: c.fileCid ?? null,
         data_hash: c.dataHash ?? null,
         issued_by: c.issuedBy ?? null,
@@ -18,6 +19,7 @@ module.exports = (prisma) => ({
       },
       update: {
         recipient_name: c.recipientName ?? undefined,
+        recipient_email: c.recipientEmail ?? undefined,
         file_cid: c.fileCid ?? undefined,
         data_hash: c.dataHash ?? undefined,
         issued_by: c.issuedBy ?? undefined,

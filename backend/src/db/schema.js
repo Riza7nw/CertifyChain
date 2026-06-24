@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS certificates (
   certificate_id TEXT PRIMARY KEY,
   institution_id INTEGER NOT NULL,
   recipient_name TEXT,                       -- PII: off-chain (tidak di blockchain)
+  recipient_email TEXT,                       -- Phase 7: pengikat ke akun penerima
   file_cid       TEXT,                        -- IPFS CID file sertifikat
   data_hash      TEXT,
   issued_by      TEXT,

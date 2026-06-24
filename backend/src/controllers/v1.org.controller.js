@@ -157,7 +157,7 @@ const issueOrgCertificate = asyncHandler(async (req, res) => {
   const orgId = Number(req.params.orgId);
   const org = await loadOrg(orgId);
 
-  const { recipientName, data } = req.body || {};
+  const { recipientName, recipientEmail, data } = req.body || {};
   if (!recipientName || typeof recipientName !== "string") {
     throw new AppError("Field 'recipientName' wajib diisi.", 400, "VALIDATION_ERROR");
   }
@@ -171,6 +171,7 @@ const issueOrgCertificate = asyncHandler(async (req, res) => {
   const result = await certificateService.issueToInstitution({
     institutionId: org.onchain_institution_id,
     recipientName,
+    recipientEmail,
     data,
     fileBuffer: req.file.buffer,
     fileName: req.file.originalname,

@@ -15,12 +15,14 @@ async function main() {
 
   const user = await prisma.users.upsert({
     where: { email },
-    update: { is_platform_admin: true },
+    update: { role: "admin", is_platform_admin: true, email_verified_at: new Date() },
     create: {
       email,
       password_hash: config.adminPasswordHash, // hash admin yang sudah ada
       name: "Platform Admin",
+      role: "admin",
       is_platform_admin: true,
+      email_verified_at: new Date(),
     },
   });
 

@@ -4,12 +4,13 @@ module.exports = (db) => {
   // maupun indexer (dari event, tanpa recipient_name -> COALESCE menjaga nilai lama).
   const upsertStmt = db.prepare(`
     INSERT INTO certificates
-      (certificate_id, institution_id, recipient_name, file_cid, data_hash, issued_by, status, tx_hash, block_number, issued_at)
+      (certificate_id, institution_id, recipient_name, recipient_email, file_cid, data_hash, issued_by, status, tx_hash, block_number, issued_at)
     VALUES
-      (@certificate_id, @institution_id, @recipient_name, @file_cid, @data_hash, @issued_by, @status, @tx_hash, @block_number, @issued_at)
+      (@certificate_id, @institution_id, @recipient_name, @recipient_email, @file_cid, @data_hash, @issued_by, @status, @tx_hash, @block_number, @issued_at)
     ON CONFLICT(certificate_id) DO UPDATE SET
-      recipient_name = COALESCE(excluded.recipient_name, certificates.recipient_name),
-      file_cid       = COALESCE(excluded.file_cid, certificates.file_cid),
+      recipient_name  = COALESCE(excluded.recipient_name, certificates.recipient_name),
+      recipient_email = COALESCE(excluded.recipient_email, certificates.recipient_email),
+      file_cid        = COALESCE(excluded.file_cid, certificates.file_cid),
       data_hash      = COALESCE(excluded.data_hash, certificates.data_hash),
       issued_by      = COALESCE(excluded.issued_by, certificates.issued_by),
       status         = COALESCE(excluded.status, certificates.status),
@@ -24,6 +25,7 @@ module.exports = (db) => {
         certificate_id: c.certificateId,
         institution_id: c.institutionId,
         recipient_name: c.recipientName ?? null,
+        recipient_email: c.recipientEmail ?? null,
         file_cid: c.fileCid ?? null,
         data_hash: c.dataHash ?? null,
         issued_by: c.issuedBy ?? null,

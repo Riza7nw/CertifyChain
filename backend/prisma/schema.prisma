@@ -34,20 +34,22 @@ model institutions {
 }
 
 model certificates {
-  certificate_id String   @id
-  institution_id Int
-  recipient_name String? // PII off-chain
-  file_cid       String?
-  data_hash      String?
-  issued_by      String?
-  status         String   @default("valid") // valid | revoked | pending
-  tx_hash        String?
-  block_number   Int?
-  issued_at      String? // ISO string (parity dengan sqlite; substr utk grouping harian)
-  created_at     DateTime @default(now())
+  certificate_id  String   @id
+  institution_id  Int
+  recipient_name  String? // PII off-chain
+  recipient_email String? // Phase 7: pengikat ke akun User (penerima). Off-chain.
+  file_cid        String?
+  data_hash       String?
+  issued_by       String?
+  status          String   @default("valid") // valid | revoked | pending
+  tx_hash         String?
+  block_number    Int?
+  issued_at       String? // ISO string (parity dengan sqlite; substr utk grouping harian)
+  created_at      DateTime @default(now())
 
   @@index([institution_id])
   @@index([issued_at])
+  @@index([recipient_email])
   @@map("certificates")
 }
 
@@ -84,12 +86,43 @@ model users {
   email             String           @unique
   password_hash     String
   name              String?
-  is_platform_admin Boolean          @default(false)
+  role              String           @default("user") // Phase 7: 'admin' | 'user' (role global, sumber kebenaran)
+  is_platform_admin Boolean          @default(false) // DEPRECATED — dipertahankan utk transisi; pakai `role`
+  email_verified_at DateTime? // null = belum verifikasi email
+  active            Boolean          @default(true) // admin bisa nonaktifkan user
   created_at        DateTime         @default(now())
   memberships       memberships[]
   refresh_tokens    refresh_tokens[]
+  email_tokens      email_tokens[]
 
   @@map("users")
+}
+
+// Token verifikasi email & reset password (disimpan sbg sha256).
+model email_tokens {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  type       String // 'verify' | 'reset'
+  token_hash String   @unique
+  expires_at DateTime
+  used       Boolean  @default(false)
+  created_at DateTime @default(now())
+  user       users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("email_tokens")
+}
+
+// Audit unduhan sertifikat oleh penerima (opsional).
+model certificate_downloads {
+  id             Int      @id @default(autoincrement())
+  certificate_id String
+  user_id        Int
+  ip             String?
+  created_at     DateTime @default(now())
+
+  @@index([certificate_id])
+  @@map("certificate_downloads")
 }
 
 model memberships {

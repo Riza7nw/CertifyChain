@@ -24,12 +24,18 @@ const authenticateUser = asyncHandler(async (req, res, next) => {
 
   const user = await authService.getUserWithMemberships(Number(payload.sub));
   if (!user) return next(new AppError("User tidak ditemukan.", 401, "USER_NOT_FOUND"));
+  if (user.active === false) return next(new AppError("Akun dinonaktifkan.", 403, "ACCOUNT_DISABLED"));
+
+  // role global = sumber kebenaran; is_platform_admin dipertahankan utk transisi.
+  const role = user.role || (user.is_platform_admin ? "admin" : "user");
 
   req.authUser = {
     id: user.id,
     email: user.email,
     name: user.name,
-    isPlatformAdmin: user.is_platform_admin,
+    role,
+    isPlatformAdmin: role === "admin",
+    emailVerified: !!user.email_verified_at,
     memberships: user.memberships.map((m) => ({
       orgId: m.organization_id,
       orgSlug: m.organization.slug,
@@ -41,7 +47,17 @@ const authenticateUser = asyncHandler(async (req, res, next) => {
   next();
 });
 
-// Hanya platform admin.
+// Batasi ke role GLOBAL tertentu (mis. requireRole("admin")).
+function requireRole(...roles) {
+  return (req, res, next) => {
+    if (!req.authUser || !roles.includes(req.authUser.role)) {
+      return next(new AppError("Anda tidak memiliki hak akses untuk aksi ini.", 403, "FORBIDDEN"));
+    }
+    next();
+  };
+}
+
+// Hanya platform admin (= role 'admin').
 function requirePlatformAdmin(req, res, next) {
   if (!req.authUser?.isPlatformAdmin) {
     return next(new AppError("Khusus platform admin.", 403, "FORBIDDEN"));
@@ -68,4 +84,4 @@ function requireOrgRole(roles, getOrgId = (req) => Number(req.params.orgId)) {
   };
 }
 
-module.exports = { authenticateUser, requirePlatformAdmin, requireOrgRole };
+module.exports = { authenticateUser, requireRole, requirePlatformAdmin, requireOrgRole };

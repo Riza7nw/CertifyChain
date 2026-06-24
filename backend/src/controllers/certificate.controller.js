@@ -26,7 +26,7 @@ const issueCertificate = asyncHandler(async (req, res) => {
     throw new AppError("institutionId tidak valid.", 400, "VALIDATION_ERROR");
   }
 
-  const { recipientName, data } = req.body || {};
+  const { recipientName, recipientEmail, data } = req.body || {};
   if (!recipientName || typeof recipientName !== "string") {
     throw new AppError("Field 'recipientName' wajib diisi.", 400, "VALIDATION_ERROR");
   }
@@ -38,6 +38,7 @@ const issueCertificate = asyncHandler(async (req, res) => {
   const result = await certificateService.issueToInstitution({
     institutionId,
     recipientName,
+    recipientEmail,
     data,
     fileBuffer: req.file.buffer,
     fileName: req.file.originalname,
