@@ -6,7 +6,7 @@ Backend Node.js + Express yang menghubungkan smart contract **CertifyChain** den
 ```
 backend/
 ├── src/
-│   ├── abi/CertifyChain.json          # ABI kontrak
+│   ├── abi/CertifyChainMultiInstitution.json  # ABI kontrak (V3)
 │   ├── config/index.js                # Load & validasi .env
 │   ├── controllers/
 │   │   └── certificate.controller.js  # Handler request/response

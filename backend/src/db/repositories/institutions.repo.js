@@ -1,4 +1,6 @@
 // src/db/repositories/institutions.repo.js
+// Implementasi node:sqlite. Method dibuat `async` agar interface seragam dengan
+// versi Postgres (Prisma) -> driver bisa di-swap tanpa mengubah caller.
 module.exports = (db) => {
   const upsertStmt = db.prepare(`
     INSERT INTO institutions (id, name, metadata_cid, admin_address, active, tx_hash, block_number)
@@ -13,7 +15,7 @@ module.exports = (db) => {
   `);
 
   return {
-    upsert(inst) {
+    async upsert(inst) {
       upsertStmt.run({
         id: inst.id,
         name: inst.name ?? null,
@@ -24,16 +26,16 @@ module.exports = (db) => {
         block_number: inst.blockNumber ?? null,
       });
     },
-    setActive(id, active) {
+    async setActive(id, active) {
       db.prepare(`UPDATE institutions SET active = ? WHERE id = ?`).run(active ? 1 : 0, id);
     },
-    get(id) {
+    async get(id) {
       return db.prepare(`SELECT * FROM institutions WHERE id = ?`).get(id) || null;
     },
-    list() {
+    async list() {
       return db.prepare(`SELECT * FROM institutions ORDER BY id ASC`).all();
     },
-    count() {
+    async count() {
       return db.prepare(`SELECT COUNT(*) AS n FROM institutions`).get().n;
     },
   };

@@ -8,16 +8,20 @@ const asyncHandler = require("../utils/asyncHandler");
 const overview = asyncHandler(async (req, res) => {
   const days = Math.min(Math.max(parseInt(req.query.days, 10) || 30, 1), 365);
 
+  const [certificates, institutions, verifications, issuedDaily, verifiedDaily] = await Promise.all([
+    db.certificates.countAll(),
+    db.institutions.count(),
+    db.verifications.countAll(),
+    db.certificates.issuedDaily(days), // [{ day, count }]
+    db.verifications.dailyCounts(days), // [{ day, count, valid_count }]
+  ]);
+
   res.json({
     success: true,
     data: {
-      totals: {
-        certificates: db.certificates.countAll(),
-        institutions: db.institutions.count(),
-        verifications: db.verifications.countAll(),
-      },
-      issuedDaily: db.certificates.issuedDaily(days), // [{ day, count }]
-      verifiedDaily: db.verifications.dailyCounts(days), // [{ day, count, valid_count }]
+      totals: { certificates, institutions, verifications },
+      issuedDaily,
+      verifiedDaily,
     },
   });
 });
@@ -27,14 +31,17 @@ const institutionStats = asyncHandler(async (req, res) => {
   const id = parseInt(req.params.id, 10);
   const days = Math.min(Math.max(parseInt(req.query.days, 10) || 30, 1), 365);
 
+  const [certificates, verifiedDaily] = await Promise.all([
+    db.certificates.countByInstitution(id),
+    db.verifications.dailyCounts(days, id),
+  ]);
+
   res.json({
     success: true,
     data: {
       institutionId: id,
-      totals: {
-        certificates: db.certificates.countByInstitution(id),
-      },
-      verifiedDaily: db.verifications.dailyCounts(days, id),
+      totals: { certificates },
+      verifiedDaily,
     },
   });
 });

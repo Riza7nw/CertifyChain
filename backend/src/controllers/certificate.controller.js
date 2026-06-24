@@ -58,7 +58,7 @@ const issueCertificate = asyncHandler(async (req, res) => {
   );
 
   // 4. Read-model (DB) untuk query dashboard cepat
-  db.certificates.upsert({
+  await db.certificates.upsert({
     certificateId,
     institutionId,
     recipientName: recipientName.trim(),
@@ -132,8 +132,8 @@ const verifyCertificate = asyncHandler(async (req, res) => {
   const valid = await blockchainService.verifyCertificate(id);
 
   // Catat event verifikasi (untuk statistik). institutionId diambil dari read-model.
-  const row = db.certificates.get(id);
-  db.verifications.record({
+  const row = await db.certificates.get(id);
+  await db.verifications.record({
     certificateId: id,
     institutionId: row?.institution_id ?? null,
     valid,
@@ -163,7 +163,8 @@ const getCertificate = asyncHandler(async (req, res) => {
   }
 
   const onchain = await blockchainService.getCertificate(id);
-  const row = db.certificates.get(id);
+  const row = await db.certificates.get(id);
+  const institution = row ? await db.institutions.get(row.institution_id) : null;
 
   res.status(200).json({
     success: true,
@@ -171,7 +172,7 @@ const getCertificate = asyncHandler(async (req, res) => {
       ...onchain,
       recipientName: row?.recipient_name ?? null, // PII dari off-chain
       fileUrl: onchain.fileCid ? storage.gatewayUrl(onchain.fileCid) : null,
-      institutionName: row ? db.institutions.get(row.institution_id)?.name ?? null : null,
+      institutionName: institution?.name ?? null,
     },
   });
 });

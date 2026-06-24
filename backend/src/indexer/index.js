@@ -68,7 +68,7 @@ async function preflight() {
       `[indexer] Plan: mulai blok ${config.indexerStartBlock}, chunk ${config.indexerMaxBlockRange} blok/req, ` +
         `maks ${config.indexerMaxChunksPerCycle} chunk/siklus, jeda ${config.indexerRequestDelayMs}ms/request.`
     );
-    const lastSaved = parseInt(db.meta.get(META_KEY) || "0", 10);
+    const lastSaved = parseInt((await db.meta.get(META_KEY)) || "0", 10);
     if (lastSaved === 0 && config.indexerStartBlock === 0 && block > 100000) {
       console.warn(
         `[indexer] PERINGATAN: INDEXER_START_BLOCK=0 sedangkan blok terbaru ${block}. ` +
@@ -82,14 +82,14 @@ async function preflight() {
   }
 }
 
-function handleEvent(ev) {
+async function handleEvent(ev) {
   const name = ev.fragment?.name;
   const a = ev.args;
   if (!name || !a) return;
 
   switch (name) {
     case "InstitutionRegistered":
-      db.institutions.upsert({
+      await db.institutions.upsert({
         id: Number(a.institutionId),
         name: a.name,
         metadataCid: a.metadataCid || null,
@@ -101,13 +101,13 @@ function handleEvent(ev) {
       break;
 
     case "InstitutionStatusChanged":
-      db.institutions.setActive(Number(a.institutionId), a.active);
+      await db.institutions.setActive(Number(a.institutionId), a.active);
       break;
 
     case "CertificateIssued":
       // recipient_name TIDAK ada di event (PII off-chain) -> upsert COALESCE
       // menjaga nilai yang sudah ditulis API. Indexer mengisi fakta on-chain.
-      db.certificates.upsert({
+      await db.certificates.upsert({
         certificateId: a.certificateId,
         institutionId: Number(a.institutionId),
         fileCid: a.fileCid,
@@ -121,7 +121,7 @@ function handleEvent(ev) {
       break;
 
     case "CertificateRevoked":
-      db.certificates.setStatus(a.certificateId, "revoked");
+      await db.certificates.setStatus(a.certificateId, "revoked");
       break;
 
     default:
@@ -154,7 +154,7 @@ async function syncRange(from, to) {
     throw err;
   }
   events.sort((x, y) => x.blockNumber - y.blockNumber || x.index - y.index);
-  for (const ev of events) handleEvent(ev);
+  for (const ev of events) await handleEvent(ev);
   return events.length;
 }
 
@@ -167,7 +167,7 @@ async function sync() {
     throw err;
   }
 
-  const last = parseInt(db.meta.get(META_KEY) || "0", 10);
+  const last = parseInt((await db.meta.get(META_KEY)) || "0", 10);
   // Mulai dari lastProcessed+1, atau dari blok deployment (indexerStartBlock).
   let cursor = last > 0 ? last + 1 : config.indexerStartBlock;
   if (cursor > latest) return;
@@ -180,7 +180,7 @@ async function sync() {
   while (cursor <= latest && chunks < config.indexerMaxChunksPerCycle) {
     const end = Math.min(cursor + range - 1, latest);
     totalEvents += await syncRange(cursor, end);
-    db.meta.set(META_KEY, end); // simpan progres tiap chunk -> resume-safe
+    await db.meta.set(META_KEY, end); // simpan progres tiap chunk -> resume-safe
     cursor = end + 1;
     chunks += 1;
   }

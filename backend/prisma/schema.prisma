@@ -1,0 +1,66 @@
+// Prisma schema — read-model CertifyChain (PostgreSQL).
+// Field sengaja snake_case agar bentuk objek hasil query identik dengan
+// repository node:sqlite -> controller tidak perlu berubah saat DB_DRIVER=postgres.
+// Langkah 1 = SWAP DB faithful (struktur sama). Tabel multi-tenant (users/orgs)
+// menyusul di Langkah 2.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model meta {
+  key   String  @id
+  value String?
+
+  @@map("meta")
+}
+
+model institutions {
+  id            Int      @id // = institutionId on-chain (di-set eksplisit, bukan auto)
+  name          String
+  metadata_cid  String?
+  admin_address String?
+  active        Boolean  @default(true)
+  tx_hash       String?
+  block_number  Int?
+  created_at    DateTime @default(now())
+
+  @@map("institutions")
+}
+
+model certificates {
+  certificate_id String   @id
+  institution_id Int
+  recipient_name String? // PII off-chain
+  file_cid       String?
+  data_hash      String?
+  issued_by      String?
+  status         String   @default("valid") // valid | revoked | pending
+  tx_hash        String?
+  block_number   Int?
+  issued_at      String? // ISO string (parity dengan sqlite; substr utk grouping harian)
+  created_at     DateTime @default(now())
+
+  @@index([institution_id])
+  @@index([issued_at])
+  @@map("certificates")
+}
+
+model verifications {
+  id             Int      @id @default(autoincrement())
+  certificate_id String?
+  institution_id Int?
+  valid          Int? // 0/1 (parity dgn sqlite; memudahkan SUM utk statistik)
+  ip             String?
+  day            String // YYYY-MM-DD
+  created_at     DateTime @default(now())
+
+  @@index([day])
+  @@index([institution_id])
+  @@map("verifications")
+}

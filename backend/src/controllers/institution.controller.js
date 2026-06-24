@@ -25,7 +25,7 @@ const registerInstitution = asyncHandler(async (req, res) => {
 
   const result = await blockchainService.registerInstitution(adminAddress, name.trim(), metadataCid || "");
 
-  db.institutions.upsert({
+  await db.institutions.upsert({
     id: result.institutionId,
     name: name.trim(),
     metadataCid: metadataCid || null,
@@ -42,22 +42,25 @@ const registerInstitution = asyncHandler(async (req, res) => {
 
 /** GET /api/institutions  (publik) -> daftar institusi dari read-model. */
 const listInstitutions = asyncHandler(async (req, res) => {
-  const items = db.institutions.list().map((i) => ({
-    id: i.id,
-    name: i.name,
-    metadataCid: i.metadata_cid,
-    metadataUrl: i.metadata_cid ? storage.gatewayUrl(i.metadata_cid) : null,
-    adminAddress: i.admin_address,
-    active: !!i.active,
-    certificateCount: db.certificates.countByInstitution(i.id),
-  }));
+  const list = await db.institutions.list();
+  const items = await Promise.all(
+    list.map(async (i) => ({
+      id: i.id,
+      name: i.name,
+      metadataCid: i.metadata_cid,
+      metadataUrl: i.metadata_cid ? storage.gatewayUrl(i.metadata_cid) : null,
+      adminAddress: i.admin_address,
+      active: !!i.active,
+      certificateCount: await db.certificates.countByInstitution(i.id),
+    }))
+  );
   res.json({ success: true, data: items });
 });
 
 /** GET /api/institutions/:id  (publik) -> detail institusi. */
 const getInstitution = asyncHandler(async (req, res) => {
   const id = parseInt(req.params.id, 10);
-  const inst = db.institutions.get(id);
+  const inst = await db.institutions.get(id);
   if (!inst) throw new AppError("Institusi tidak ditemukan.", 404, "INSTITUTION_NOT_FOUND");
 
   res.json({
@@ -68,7 +71,7 @@ const getInstitution = asyncHandler(async (req, res) => {
       metadataCid: inst.metadata_cid,
       adminAddress: inst.admin_address,
       active: !!inst.active,
-      certificateCount: db.certificates.countByInstitution(inst.id),
+      certificateCount: await db.certificates.countByInstitution(inst.id),
     },
   });
 });
@@ -85,8 +88,10 @@ const listInstitutionCertificates = asyncHandler(async (req, res) => {
   const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
   const offset = (page - 1) * limit;
 
-  const total = db.certificates.countByInstitution(id);
-  const rows = db.certificates.listByInstitution(id, { limit, offset });
+  const [total, rows] = await Promise.all([
+    db.certificates.countByInstitution(id),
+    db.certificates.listByInstitution(id, { limit, offset }),
+  ]);
 
   res.json({
     success: true,

@@ -1,0 +1,26 @@
+# Infra dev untuk CertifyChain V2.
+# Postgres = read-model (menggantikan node:sqlite saat DB_DRIVER=postgres).
+#   docker compose up -d      # jalankan
+#   docker compose down       # hentikan (data tetap di volume)
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: certifychain-pg
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: certifychain
+      POSTGRES_PASSWORD: certifychain_dev # DEV ONLY — ganti di produksi (managed DB)
+      POSTGRES_DB: certifychain
+    ports:
+      # Host 5433 (5432 dipakai PostgreSQL native di mesin ini) -> container 5432
+      - "5433:5432"
+    volumes:
+      - certifychain_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U certifychain -d certifychain"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  certifychain_pgdata:

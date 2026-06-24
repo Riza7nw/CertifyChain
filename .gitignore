@@ -22,6 +22,9 @@ artifacts/
 cache/
 typechain-types/
 
+# ===== Remix dependency cache (tidak perlu di repo) =====
+contracts/.deps/
+
 # ===== Backend runtime (DB read-model, file IPFS lokal, log) =====
 backend/data/
 backend/storage/

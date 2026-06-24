@@ -19,7 +19,7 @@ module.exports = (db) => {
   `);
 
   return {
-    upsert(c) {
+    async upsert(c) {
       upsertStmt.run({
         certificate_id: c.certificateId,
         institution_id: c.institutionId,
@@ -33,14 +33,14 @@ module.exports = (db) => {
         issued_at: c.issuedAt ?? null,
       });
     },
-    setStatus(certificateId, status) {
+    async setStatus(certificateId, status) {
       db.prepare(`UPDATE certificates SET status = ? WHERE certificate_id = ?`).run(status, certificateId);
     },
-    get(certificateId) {
+    async get(certificateId) {
       return db.prepare(`SELECT * FROM certificates WHERE certificate_id = ?`).get(certificateId) || null;
     },
     // Dashboard institusi: daftar sertifikat (paginasi).
-    listByInstitution(institutionId, { limit = 20, offset = 0 } = {}) {
+    async listByInstitution(institutionId, { limit = 20, offset = 0 } = {}) {
       return db
         .prepare(
           `SELECT * FROM certificates WHERE institution_id = ?
@@ -48,16 +48,16 @@ module.exports = (db) => {
         )
         .all(institutionId, limit, offset);
     },
-    countByInstitution(institutionId) {
+    async countByInstitution(institutionId) {
       return db
         .prepare(`SELECT COUNT(*) AS n FROM certificates WHERE institution_id = ?`)
         .get(institutionId).n;
     },
-    countAll() {
+    async countAll() {
       return db.prepare(`SELECT COUNT(*) AS n FROM certificates`).get().n;
     },
     // Statistik: jumlah penerbitan per hari (N hari terakhir).
-    issuedDaily(days = 30) {
+    async issuedDaily(days = 30) {
       return db
         .prepare(
           `SELECT substr(issued_at, 1, 10) AS day, COUNT(*) AS count

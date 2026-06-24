@@ -33,8 +33,9 @@ const config = {
   adminPasswordHash: required("ADMIN_PASSWORD_HASH"),
 
   // --- Database (read-model untuk dashboard & statistik) ---
-  // Dev: SQLite (node:sqlite, zero-config). Produksi: ganti ke PostgreSQL
-  // di balik repository interface yang sama (lihat src/db/).
+  // Driver: "sqlite" (node:sqlite, default) atau "postgres" (Prisma).
+  // Repository interface sama (async) untuk keduanya -> swappable.
+  dbDriver: (process.env.DB_DRIVER || "sqlite").toLowerCase(),
   dbPath: process.env.DB_PATH || path.join(__dirname, "..", "..", "data", "certifychain.db"),
 
   // --- Penyimpanan file (IPFS) ---
