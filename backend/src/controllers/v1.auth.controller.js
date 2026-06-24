@@ -6,6 +6,7 @@
 // menyusul saat wiring frontend.
 
 const authService = require("../services/auth.service");
+const mailer = require("../services/mailer.service");
 const prisma = require("../db/prismaClient");
 const config = require("../config");
 const asyncHandler = require("../utils/asyncHandler");
@@ -74,7 +75,14 @@ const register = asyncHandler(async (req, res) => {
     user = await prisma.users.create({ data: { email, password_hash, name: name ?? null } });
   }
 
-  // TODO (slice berikut): kirim token verifikasi email.
+  // Kirim email verifikasi (jangan gagalkan registrasi bila email error).
+  try {
+    const vt = await authService.createEmailToken(user.id, "verify");
+    await mailer.sendVerificationEmail(user.email, vt);
+  } catch (e) {
+    console.error("[register] gagal kirim email verifikasi:", e.message);
+  }
+
   const accessToken = authService.signAccessToken(user);
   const refreshToken = await authService.issueRefreshToken(user.id);
   setRefreshCookie(res, refreshToken);
@@ -127,9 +135,28 @@ const logout = asyncHandler(async (req, res) => {
   res.json({ success: true, message: "Berhasil logout." });
 });
 
+/** POST /api/v1/auth/verify-email — verifikasi email via token (publik). */
+const verifyEmail = asyncHandler(async (req, res) => {
+  const token = req.body?.token || req.query?.token;
+  if (!token) throw new AppError("token wajib.", 400, "VALIDATION_ERROR");
+  const userId = await authService.verifyEmailToken(String(token));
+  if (!userId) throw new AppError("Token verifikasi tidak valid atau kedaluwarsa.", 400, "INVALID_TOKEN");
+  res.json({ success: true, message: "Email berhasil diverifikasi." });
+});
+
+/** POST /api/v1/auth/resend-verification — kirim ulang email verifikasi (butuh login). */
+const resendVerification = asyncHandler(async (req, res) => {
+  if (req.authUser.emailVerified) {
+    return res.json({ success: true, message: "Email sudah terverifikasi." });
+  }
+  const vt = await authService.createEmailToken(req.authUser.id, "verify");
+  await mailer.sendVerificationEmail(req.authUser.email, vt);
+  res.json({ success: true, message: "Email verifikasi dikirim ulang." });
+});
+
 /** GET /api/v1/auth/me — profil + memberships (butuh access token). */
 const me = asyncHandler(async (req, res) => {
   res.json({ success: true, data: req.authUser });
 });
 
-module.exports = { register, login, refresh, logout, me };
+module.exports = { register, login, refresh, logout, me, verifyEmail, resendVerification };

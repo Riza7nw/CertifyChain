@@ -65,6 +65,14 @@ function requirePlatformAdmin(req, res, next) {
   next();
 }
 
+// Wajib email terverifikasi (Phase 7c: lihat/unduh sertifikat sendiri).
+function requireVerifiedEmail(req, res, next) {
+  if (!req.authUser?.emailVerified) {
+    return next(new AppError("Email belum diverifikasi.", 403, "EMAIL_NOT_VERIFIED"));
+  }
+  next();
+}
+
 /**
  * Membatasi akses pada organisasi tertentu + role tertentu (tenant-scoping).
  * @param {string[]} roles role yang diizinkan (mis. ["OrgAdmin","Issuer"])
@@ -84,4 +92,4 @@ function requireOrgRole(roles, getOrgId = (req) => Number(req.params.orgId)) {
   };
 }
 
-module.exports = { authenticateUser, requireRole, requirePlatformAdmin, requireOrgRole };
+module.exports = { authenticateUser, requireRole, requirePlatformAdmin, requireVerifiedEmail, requireOrgRole };

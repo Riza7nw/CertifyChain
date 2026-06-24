@@ -12,4 +12,8 @@ router.post("/refresh", c.refresh);
 router.post("/logout", c.logout);
 router.get("/me", authenticateUser, c.me);
 
+// Email verification (Phase 7b)
+router.post("/verify-email", c.verifyEmail); // publik (token = otorisasi)
+router.post("/resend-verification", loginLimiter, authenticateUser, c.resendVerification);
+
 module.exports = router;

@@ -35,6 +35,11 @@ const config = {
   // --- Multi-tenant auth (Langkah 2, /api/v1/auth) ---
   accessTokenTtl: process.env.ACCESS_TOKEN_TTL || "15m",
   refreshTokenTtlDays: parseInt(process.env.REFRESH_TOKEN_TTL_DAYS || "7", 10),
+
+  // --- Email (Phase 7b: verifikasi email) ---
+  mailProvider: (process.env.MAIL_PROVIDER || "console").toLowerCase(), // console (dev) | ...
+  mailFrom: process.env.MAIL_FROM || "CertifyChain <no-reply@certifychain.local>",
+  emailVerifyTtlHours: parseInt(process.env.EMAIL_VERIFY_TTL_HOURS || "24", 10),
   // CORS allowlist (origin frontend). Wajib spesifik karena cookie pakai credentials.
   corsOrigins: (process.env.CORS_ORIGINS || "http://localhost:5173")
     .split(",")

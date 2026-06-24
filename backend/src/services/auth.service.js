@@ -63,6 +63,29 @@ async function getUserWithMemberships(userId) {
   });
 }
 
+// --- Email tokens (verifikasi / reset) ---
+async function createEmailToken(userId, type = "verify") {
+  const raw = crypto.randomBytes(32).toString("hex");
+  const ttlHours = type === "verify" ? config.emailVerifyTtlHours : 1;
+  // Batalkan token lama tipe sama yang belum dipakai (penting untuk resend).
+  await prisma.email_tokens.updateMany({ where: { user_id: userId, type, used: false }, data: { used: true } });
+  await prisma.email_tokens.create({
+    data: { user_id: userId, type, token_hash: sha256(raw), expires_at: new Date(Date.now() + ttlHours * 3600000) },
+  });
+  return raw;
+}
+
+/** Verifikasi token email -> tandai used + set email_verified_at. @returns userId|null */
+async function verifyEmailToken(raw) {
+  const rec = await prisma.email_tokens.findUnique({ where: { token_hash: sha256(raw) } });
+  if (!rec || rec.used || rec.type !== "verify" || rec.expires_at < new Date()) return null;
+  await prisma.$transaction([
+    prisma.email_tokens.update({ where: { id: rec.id }, data: { used: true } }),
+    prisma.users.update({ where: { id: rec.user_id }, data: { email_verified_at: new Date() } }),
+  ]);
+  return rec.user_id;
+}
+
 module.exports = {
   hashPassword,
   verifyPassword,
@@ -72,4 +95,6 @@ module.exports = {
   rotateRefreshToken,
   revokeRefreshToken,
   getUserWithMemberships,
+  createEmailToken,
+  verifyEmailToken,
 };
