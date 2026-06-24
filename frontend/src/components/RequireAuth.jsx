@@ -1,12 +1,22 @@
 import { Navigate, useLocation } from "react-router-dom";
-import { isAuthenticated } from "../auth/auth";
+import { useAuth } from "../auth/AuthContext";
+import Spinner from "./Spinner";
 
-// Route guard sederhana: bila belum login (tidak ada token), alihkan ke /login.
-// Menyimpan lokasi asal di state agar bisa kembali setelah login berhasil.
+// Guard: tunggu bootstrap sesi; bila belum login -> /login.
 export default function RequireAuth({ children }) {
+  const { loading, isAuthenticated } = useAuth();
   const location = useLocation();
 
-  if (!isAuthenticated()) {
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-slate-500">
+        <Spinner className="h-6 w-6" />
+        <span className="ml-3 text-sm">Memuat sesi…</span>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
