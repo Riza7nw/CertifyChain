@@ -28,9 +28,13 @@ const config = {
 
   // --- Security / JWT ---
   jwtSecret: required("JWT_SECRET"),
-  jwtExpiresIn: process.env.JWT_EXPIRES_IN || "1h",
+  jwtExpiresIn: process.env.JWT_EXPIRES_IN || "1h", // token admin lama (/api/auth)
   adminUsername: required("ADMIN_USERNAME"),
   adminPasswordHash: required("ADMIN_PASSWORD_HASH"),
+
+  // --- Multi-tenant auth (Langkah 2, /api/v1/auth) ---
+  accessTokenTtl: process.env.ACCESS_TOKEN_TTL || "15m",
+  refreshTokenTtlDays: parseInt(process.env.REFRESH_TOKEN_TTL_DAYS || "7", 10),
 
   // --- Database (read-model untuk dashboard & statistik) ---
   // Driver: "sqlite" (node:sqlite, default) atau "postgres" (Prisma).

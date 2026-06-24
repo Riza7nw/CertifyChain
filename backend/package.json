@@ -8,6 +8,7 @@
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "indexer": "node src/indexer/index.js",
+    "seed": "node scripts/seed.js",
     "hash-password": "node scripts/hash-password.js"
   },
   "keywords": [

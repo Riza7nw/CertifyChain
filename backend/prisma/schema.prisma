@@ -64,3 +64,56 @@ model verifications {
   @@index([institution_id])
   @@map("verifications")
 }
+
+// ======================= IDENTITY / MULTI-TENANT (Langkah 2) =======================
+// Tabel ini Postgres-only (identity store SaaS). Terpisah dari read-model di atas.
+
+model organizations {
+  id                     Int           @id @default(autoincrement())
+  name                   String
+  slug                   String        @unique
+  onchain_institution_id Int?          @unique // link ke institutions.id (read-model); null sampai diprovision on-chain
+  created_at             DateTime      @default(now())
+  memberships            memberships[]
+
+  @@map("organizations")
+}
+
+model users {
+  id                Int              @id @default(autoincrement())
+  email             String           @unique
+  password_hash     String
+  name              String?
+  is_platform_admin Boolean          @default(false)
+  created_at        DateTime         @default(now())
+  memberships       memberships[]
+  refresh_tokens    refresh_tokens[]
+
+  @@map("users")
+}
+
+model memberships {
+  id              Int           @id @default(autoincrement())
+  user_id         Int
+  organization_id Int
+  role            String // OrgAdmin | Issuer | Viewer
+  created_at      DateTime      @default(now())
+  user            users         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  organization    organizations @relation(fields: [organization_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, organization_id])
+  @@map("memberships")
+}
+
+model refresh_tokens {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  token_hash String   @unique // sha256(raw token) — raw tidak pernah disimpan
+  expires_at DateTime
+  revoked    Boolean  @default(false)
+  created_at DateTime @default(now())
+  user       users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@map("refresh_tokens")
+}
