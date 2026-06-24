@@ -1,0 +1,38 @@
+# ===== Dependencies =====
+node_modules/
+
+# ===== Secrets & environment (JANGAN pernah di-commit) =====
+.env
+.env.local
+.env*.local
+.env.*.local
+*.pem
+*.key
+*.keystore
+*.mnemonic
+
+# ===== Build output =====
+dist/
+build/
+.next/
+out/
+
+# ===== Hardhat (artifak & cache hasil compile) =====
+artifacts/
+cache/
+typechain-types/
+
+# ===== Backend runtime (DB read-model, file IPFS lokal, log) =====
+backend/data/
+backend/storage/
+backend/logs/
+*.log
+
+# ===== OS / editor =====
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# ===== Claude Code (settings lokal/pribadi) =====
+.claude/settings.local.json
