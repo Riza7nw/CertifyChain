@@ -6,6 +6,8 @@ const express = require("express");
 const cors = require("cors");
 const morgan = require("morgan");
 const helmet = require("helmet");
+const cookieParser = require("cookie-parser");
+const config = require("./config");
 
 const certificateRoutes = require("./routes/certificate.routes");
 const authRoutes = require("./routes/auth.routes");
@@ -26,7 +28,18 @@ app.set("trust proxy", 1);
 
 // --- Middleware global ---
 app.use(helmet());                        // security headers (XSS, sniffing, dll.)
-app.use(cors());                          // izinkan akses dari frontend
+// CORS allowlist + credentials (wajib spesifik origin karena pakai cookie).
+app.use(
+  cors({
+    origin(origin, cb) {
+      // origin undefined = request non-browser (curl/server) -> izinkan.
+      if (!origin || config.corsOrigins.includes(origin)) return cb(null, true);
+      return cb(null, false); // origin tak diizinkan -> tanpa header CORS (browser blokir)
+    },
+    credentials: true,
+  })
+);
+app.use(cookieParser());                  // baca cookie (refresh token httpOnly)
 app.use(express.json({ limit: "100kb" })); // parse body JSON + batasi ukuran
 app.use(morgan("dev"));                   // logging request
 

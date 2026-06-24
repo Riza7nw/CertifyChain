@@ -7,10 +7,28 @@
 
 const authService = require("../services/auth.service");
 const prisma = require("../db/prismaClient");
+const config = require("../config");
 const asyncHandler = require("../utils/asyncHandler");
 const AppError = require("../utils/AppError");
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const REFRESH_COOKIE = "cc_refresh";
+
+// Refresh token disimpan sebagai cookie httpOnly (tak terbaca JS -> anti-XSS).
+// Path dibatasi ke /api/v1/auth supaya cookie hanya dikirim ke endpoint auth.
+function refreshCookieOpts() {
+  return {
+    httpOnly: true,
+    secure: config.cookieSecure, // true di produksi (HTTPS)
+    sameSite: "lax",
+    path: "/api/v1/auth",
+    maxAge: config.refreshTokenTtlDays * 86400000,
+  };
+}
+const setRefreshCookie = (res, token) => res.cookie(REFRESH_COOKIE, token, refreshCookieOpts());
+const clearRefreshCookie = (res) =>
+  res.clearCookie(REFRESH_COOKIE, { httpOnly: true, secure: config.cookieSecure, sameSite: "lax", path: "/api/v1/auth" });
+const readRefresh = (req) => req.cookies?.[REFRESH_COOKIE] || req.body?.refreshToken;
 
 function slugify(s) {
   return (
@@ -49,12 +67,13 @@ const register = asyncHandler(async (req, res) => {
 
   const accessToken = authService.signAccessToken(user);
   const refreshToken = await authService.issueRefreshToken(user.id);
+  setRefreshCookie(res, refreshToken);
 
   res.status(201).json({
     success: true,
     data: {
       accessToken,
-      refreshToken,
+      refreshToken, // juga di-set sebagai cookie httpOnly; klien browser pakai cookie
       user: { id: user.id, email: user.email },
       org: { id: org.id, slug: org.slug, name: org.name, role: "OrgAdmin" },
     },
@@ -72,26 +91,29 @@ const login = asyncHandler(async (req, res) => {
 
   const accessToken = authService.signAccessToken(user);
   const refreshToken = await authService.issueRefreshToken(user.id);
+  setRefreshCookie(res, refreshToken);
   res.json({ success: true, data: { accessToken, refreshToken } });
 });
 
-/** POST /api/v1/auth/refresh — rotasi refresh token, keluarkan access baru. */
+/** POST /api/v1/auth/refresh — rotasi refresh token (dari cookie atau body). */
 const refresh = asyncHandler(async (req, res) => {
-  const { refreshToken } = req.body || {};
-  if (!refreshToken) throw new AppError("refreshToken wajib.", 400, "VALIDATION_ERROR");
+  const presented = readRefresh(req);
+  if (!presented) throw new AppError("refreshToken wajib (cookie atau body).", 400, "VALIDATION_ERROR");
 
-  const rotated = await authService.rotateRefreshToken(refreshToken);
+  const rotated = await authService.rotateRefreshToken(presented);
   if (!rotated) throw new AppError("Refresh token tidak valid atau kedaluwarsa.", 401, "INVALID_REFRESH");
 
   const user = await prisma.users.findUnique({ where: { id: rotated.userId } });
   const accessToken = authService.signAccessToken(user);
+  setRefreshCookie(res, rotated.raw);
   res.json({ success: true, data: { accessToken, refreshToken: rotated.raw } });
 });
 
-/** POST /api/v1/auth/logout — cabut refresh token. */
+/** POST /api/v1/auth/logout — cabut refresh token + hapus cookie. */
 const logout = asyncHandler(async (req, res) => {
-  const { refreshToken } = req.body || {};
-  if (refreshToken) await authService.revokeRefreshToken(refreshToken);
+  const presented = readRefresh(req);
+  if (presented) await authService.revokeRefreshToken(presented);
+  clearRefreshCookie(res);
   res.json({ success: true, message: "Berhasil logout." });
 });
 

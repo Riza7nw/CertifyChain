@@ -35,6 +35,13 @@ const config = {
   // --- Multi-tenant auth (Langkah 2, /api/v1/auth) ---
   accessTokenTtl: process.env.ACCESS_TOKEN_TTL || "15m",
   refreshTokenTtlDays: parseInt(process.env.REFRESH_TOKEN_TTL_DAYS || "7", 10),
+  // CORS allowlist (origin frontend). Wajib spesifik karena cookie pakai credentials.
+  corsOrigins: (process.env.CORS_ORIGINS || "http://localhost:5173")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean),
+  // Cookie refresh token: Secure hanya di produksi (HTTPS).
+  cookieSecure: process.env.NODE_ENV === "production",
 
   // --- Database (read-model untuk dashboard & statistik) ---
   // Driver: "sqlite" (node:sqlite, default) atau "postgres" (Prisma).
