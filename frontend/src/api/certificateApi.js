@@ -145,3 +145,16 @@ export function getCertificate(id) {
 export function getAuditLog(limit = 50) {
   return request(`/audit?limit=${encodeURIComponent(limit)}`, { auth: true });
 }
+
+/**
+ * GET /v1/public/certificates (publik, Phase 7e) — cari by certId dan/atau nama institusi.
+ * -> { pagination, items: [{ certificateId, institutionName, status, issuedAt, fileUrl, verifyUrl }] }
+ */
+export function searchPublicCertificates({ certId, institution, page = 1, limit = 20 } = {}) {
+  const qs = new URLSearchParams();
+  if (certId) qs.set("certId", certId);
+  if (institution) qs.set("institution", institution);
+  qs.set("page", String(page));
+  qs.set("limit", String(limit));
+  return request(`/v1/public/certificates?${qs.toString()}`);
+}

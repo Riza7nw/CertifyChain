@@ -153,12 +153,56 @@ export function AuthProvider({ children }) {
     [refresh]
   );
 
+  // Unduh file terlindungi (mis. sertifikat 7c). Sama seperti apiFetch (auth +
+  // auto-refresh sekali saat 401), tapi mengembalikan Blob (bukan JSON).
+  const apiBlob = useCallback(
+    async (path) => {
+      const call = (token) =>
+        fetch(BASE + path, {
+          credentials: "include",
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+        });
+      let res;
+      try {
+        res = await call(tokenRef.current);
+      } catch {
+        throw new Error("Tidak dapat terhubung ke server backend.");
+      }
+      if (res.status === 401) {
+        const nt = await refresh();
+        if (nt) {
+          tokenRef.current = nt;
+          try {
+            res = await call(nt);
+          } catch {
+            throw new Error("Tidak dapat terhubung ke server backend.");
+          }
+        }
+      }
+      if (!res.ok) {
+        let body = null;
+        try {
+          body = await res.json();
+        } catch {
+          /* bukan JSON */
+        }
+        const e = new Error(body?.error?.message || `Unduhan gagal (HTTP ${res.status}).`);
+        e.status = res.status;
+        e.code = body?.error?.code;
+        throw e;
+      }
+      return res.blob();
+    },
+    [refresh]
+  );
+
   const memberships = user?.memberships || [];
   const value = {
     loading,
     user,
     isAuthenticated: !!user,
     isPlatformAdmin: !!user?.isPlatformAdmin,
+    emailVerified: !!user?.emailVerified,
     memberships,
     currentOrgId,
     setCurrentOrgId,
@@ -167,6 +211,7 @@ export function AuthProvider({ children }) {
     register,
     logout,
     apiFetch,
+    apiBlob,
   };
 
   return <AuthCtx.Provider value={value}>{children}</AuthCtx.Provider>;

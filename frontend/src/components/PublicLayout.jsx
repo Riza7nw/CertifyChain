@@ -18,12 +18,20 @@ export default function PublicLayout({ children }) {
               <p className="text-xs text-slate-400">Public Verification</p>
             </div>
           </Link>
-          <Link
-            to="/scan"
-            className="rounded-lg px-3 py-1.5 text-sm font-medium text-brand-600 hover:bg-brand-50"
-          >
-            Scan QR
-          </Link>
+          <div className="flex items-center gap-1">
+            <Link
+              to="/search"
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-brand-600 hover:bg-brand-50"
+            >
+              Cari
+            </Link>
+            <Link
+              to="/scan"
+              className="rounded-lg px-3 py-1.5 text-sm font-medium text-brand-600 hover:bg-brand-50"
+            >
+              Scan QR
+            </Link>
+          </div>
         </div>
       </header>
 

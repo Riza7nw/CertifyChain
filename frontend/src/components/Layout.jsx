@@ -4,12 +4,20 @@ import { useAuth } from "../auth/AuthContext";
 const icons = {
   orgs: "M19 21V5a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v16m14 0H5m14 0h2m-2 0v-4a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v4m-6 0v-4a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v4m-6 0H5m4-12h2m-2 4h2m4-4h2m-2 4h2",
   scan: "M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4v-4m-4 0h.01M4 8h2V4M4 16v4h4M4 12h.01M8 4h.01M16 4h4v4",
+  mycerts: "M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.586a1 1 0 0 1 .707.293l5.414 5.414a1 1 0 0 1 .293.707V19a2 2 0 0 1-2 2z",
+  users: "M12 4.354a4 4 0 1 1 0 5.292M15 21H3v-1a6 6 0 0 1 12 0v1zm0 0h6v-1a6 6 0 0 0-9-5.197M13 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0z",
+  allcerts: "M4 6h16M4 10h16M4 14h16M4 18h16",
   logout: "M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1",
 };
 
-const navItems = [
+const baseNav = [
   { to: "/", label: "Organisasi", icon: "orgs", end: true },
+  { to: "/me/certificates", label: "Sertifikat Saya", icon: "mycerts" },
   { to: "/scan", label: "Scan QR", icon: "scan" },
+];
+const adminNav = [
+  { to: "/admin/users", label: "Kelola User", icon: "users" },
+  { to: "/admin/certificates", label: "Semua Sertifikat", icon: "allcerts" },
 ];
 
 function NavItem({ to, label, icon, end }) {
@@ -34,6 +42,7 @@ function NavItem({ to, label, icon, end }) {
 export default function Layout({ children }) {
   const navigate = useNavigate();
   const { user, memberships, currentOrgId, setCurrentOrgId, isPlatformAdmin, logout } = useAuth();
+  const navItems = isPlatformAdmin ? [...baseNav, ...adminNav] : baseNav;
 
   async function handleLogout() {
     await logout();

@@ -7,8 +7,12 @@ import Register from "./pages/Register";
 import OrgsPage from "./pages/OrgsPage";
 import OrgDashboard from "./pages/OrgDashboard";
 import IssueCert from "./pages/IssueCert";
+import MyCertificates from "./pages/MyCertificates";
+import AdminUsers from "./pages/AdminUsers";
+import AdminCertificates from "./pages/AdminCertificates";
 import VerifyCertificate from "./pages/VerifyCertificate";
 import PublicVerify from "./pages/PublicVerify";
+import PublicSearch from "./pages/PublicSearch";
 import ScanVerify from "./pages/ScanVerify";
 
 // Routing multi-tenant (Langkah 2).
@@ -31,12 +35,16 @@ export default function App() {
 
       {/* Publik (tanpa login) */}
       <Route path="/scan" element={<PublicLayout><ScanVerify /></PublicLayout>} />
+      <Route path="/search" element={<PublicLayout><PublicSearch /></PublicLayout>} />
       <Route path="/verify/:id" element={<PublicLayout><PublicVerify /></PublicLayout>} />
 
       {/* Dashboard (butuh login) */}
       <Route path="/" element={<Protected><OrgsPage /></Protected>} />
       <Route path="/orgs/:orgId" element={<Protected><OrgDashboard /></Protected>} />
       <Route path="/orgs/:orgId/issue" element={<Protected><IssueCert /></Protected>} />
+      <Route path="/me/certificates" element={<Protected><MyCertificates /></Protected>} />
+      <Route path="/admin/users" element={<Protected><AdminUsers /></Protected>} />
+      <Route path="/admin/certificates" element={<Protected><AdminCertificates /></Protected>} />
       <Route path="/verify" element={<Protected><VerifyCertificate /></Protected>} />
 
       <Route path="*" element={<Navigate to="/" replace />} />
