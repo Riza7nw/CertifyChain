@@ -4,6 +4,7 @@
 const blockchainService = require("../services/blockchain.service");
 const qrService = require("../services/qr.service");
 const certificateService = require("../services/certificate.service");
+const pdfVerifyService = require("../services/pdfVerify.service");
 const storage = require("../storage");
 const db = require("../db");
 const asyncHandler = require("../utils/asyncHandler");
@@ -130,4 +131,16 @@ const getCertificate = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = { issueCertificate, verifyCertificate, getCertificate, getCertificateQr };
+/**
+ * POST /api/verify-pdf  (publik, multipart 'file')
+ * Anti-tampering: hitung ulang CID/keccak byte PDF, cocokkan ke catatan + on-chain.
+ */
+const verifyPdf = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    throw new AppError("File PDF (field 'file') wajib diunggah.", 400, "VALIDATION_ERROR");
+  }
+  const result = await pdfVerifyService.verifyPdf(req.file.buffer);
+  res.status(200).json({ success: true, data: result });
+});
+
+module.exports = { issueCertificate, verifyCertificate, getCertificate, getCertificateQr, verifyPdf };

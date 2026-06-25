@@ -51,6 +51,10 @@ module.exports = (db) => {
     async get(certificateId) {
       return db.prepare(`SELECT * FROM certificates WHERE certificate_id = ?`).get(certificateId) || null;
     },
+    // Phase PDF (Fase B): cari sertifikat berdasarkan CID file (verify-by-file).
+    async findByFileCid(cid) {
+      return db.prepare(`SELECT * FROM certificates WHERE file_cid = ? LIMIT 1`).get(cid) || null;
+    },
     // Dashboard institusi: daftar sertifikat (paginasi).
     async listByInstitution(institutionId, { limit = 20, offset = 0 } = {}) {
       return db

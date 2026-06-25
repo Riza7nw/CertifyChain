@@ -13,6 +13,7 @@ import AdminCertificates from "./pages/AdminCertificates";
 import VerifyCertificate from "./pages/VerifyCertificate";
 import PublicVerify from "./pages/PublicVerify";
 import PublicSearch from "./pages/PublicSearch";
+import VerifyFile from "./pages/VerifyFile";
 import ScanVerify from "./pages/ScanVerify";
 
 // Routing multi-tenant (Langkah 2).
@@ -36,6 +37,7 @@ export default function App() {
       {/* Publik (tanpa login) */}
       <Route path="/scan" element={<PublicShell><ScanVerify /></PublicShell>} />
       <Route path="/search" element={<PublicShell><PublicSearch /></PublicShell>} />
+      <Route path="/verify-file" element={<PublicShell><VerifyFile /></PublicShell>} />
       <Route path="/verify/:id" element={<PublicShell><PublicVerify /></PublicShell>} />
 
       {/* Dashboard (butuh login) */}

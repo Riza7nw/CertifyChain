@@ -21,6 +21,9 @@ export default function PublicShell({ children }) {
             <Link to="/search" className="rounded-lg px-3 py-1.5 text-sm font-medium text-fg-muted hover:bg-surface-hover hover:text-fg">
               Cari
             </Link>
+            <Link to="/verify-file" className="hidden rounded-lg px-3 py-1.5 text-sm font-medium text-fg-muted hover:bg-surface-hover hover:text-fg sm:inline">
+              Verifikasi file
+            </Link>
             <Link to="/scan" className="rounded-lg px-3 py-1.5 text-sm font-medium text-fg-muted hover:bg-surface-hover hover:text-fg">
               Scan QR
             </Link>

@@ -52,3 +52,13 @@ export function searchPublicCertificates({ certId, institution, page = 1, limit 
   qs.set("limit", String(limit));
   return request(`/v1/public/certificates?${qs.toString()}`);
 }
+
+/**
+ * POST /verify-pdf (publik, Fase B) — unggah PDF untuk cek anti-tamper.
+ * -> { match, tampered, onChainValid, certificateId, recipientName, institutionName, status, message }
+ */
+export function verifyPdfFile(file) {
+  const fd = new FormData();
+  fd.append("file", file);
+  return request("/verify-pdf", { method: "POST", body: fd });
+}

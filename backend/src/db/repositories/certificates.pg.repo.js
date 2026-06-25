@@ -49,6 +49,11 @@ module.exports = (prisma) => ({
     return prisma.certificates.findUnique({ where: { certificate_id: certificateId } });
   },
 
+  // Phase PDF (Fase B): cari sertifikat berdasarkan CID file (verify-by-file).
+  async findByFileCid(cid) {
+    return prisma.certificates.findFirst({ where: { file_cid: cid } });
+  },
+
   async listByInstitution(institutionId, { limit = 20, offset = 0 } = {}) {
     return prisma.certificates.findMany({
       where: { institution_id: institutionId },

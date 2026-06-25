@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Plus, RotateCcw, ExternalLink, Download } from "lucide-react";
+import { Plus, RotateCcw, ExternalLink, Download, Sparkles, Upload } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { useToast } from "../components/Toast";
 import Card from "../components/Card";
@@ -8,7 +8,7 @@ import Button from "../components/Button";
 import Alert from "../components/Alert";
 import PageHeader from "../components/PageHeader";
 import CopyField from "../components/CopyField";
-import { TextField, TextAreaField, FileField } from "../components/Field";
+import { TextField, TextAreaField, FileField, SelectField } from "../components/Field";
 
 export default function IssueCert() {
   const { orgId } = useParams();
@@ -18,33 +18,47 @@ export default function IssueCert() {
   const navigate = useNavigate();
   const orgName = memberships.find((m) => m.orgId === id)?.orgName || `Organisasi #${id}`;
 
+  const [mode, setMode] = useState("generate"); // 'generate' | 'upload'
   const [recipientName, setRecipientName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [data, setData] = useState("");
   const [file, setFile] = useState(null);
+  const [templates, setTemplates] = useState([]);
+  const [templateKey, setTemplateKey] = useState("classic");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
+
+  useEffect(() => {
+    apiFetch("/v1/certificate-templates")
+      .then((t) => { if (t?.length) { setTemplates(t); setTemplateKey(t[0].key); } })
+      .catch(() => {});
+  }, [apiFetch]);
 
   async function submit(e) {
     e.preventDefault();
     setError(null);
     if (!recipientName.trim()) return setError("Nama penerima wajib diisi.");
-    if (!file) return setError("File sertifikat wajib diunggah.");
+    if (mode === "upload" && !file) return setError("File sertifikat wajib diunggah.");
     setLoading(true);
     try {
-      const fd = new FormData();
-      fd.append("recipientName", recipientName.trim());
-      if (recipientEmail.trim()) fd.append("recipientEmail", recipientEmail.trim());
-      if (data.trim()) fd.append("data", data.trim());
-      fd.append("file", file);
-      const res = await apiFetch(`/v1/orgs/${id}/certificates`, { method: "POST", body: fd });
+      let res;
+      if (mode === "generate") {
+        res = await apiFetch(`/v1/orgs/${id}/certificates/generate`, {
+          method: "POST",
+          body: JSON.stringify({ recipientName: recipientName.trim(), recipientEmail: recipientEmail.trim() || undefined, data: data.trim() || undefined, templateKey }),
+        });
+      } else {
+        const fd = new FormData();
+        fd.append("recipientName", recipientName.trim());
+        if (recipientEmail.trim()) fd.append("recipientEmail", recipientEmail.trim());
+        if (data.trim()) fd.append("data", data.trim());
+        fd.append("file", file);
+        res = await apiFetch(`/v1/orgs/${id}/certificates`, { method: "POST", body: fd });
+      }
       setResult(res);
-      setRecipientName("");
-      setRecipientEmail("");
-      setData("");
-      setFile(null);
-      toast.success("Sertifikat diterbitkan", "Tercatat di blockchain & IPFS.");
+      setRecipientName(""); setRecipientEmail(""); setData(""); setFile(null);
+      toast.success("Sertifikat diterbitkan", "Tercatat di blockchain.");
     } catch (err) {
       toast.error("Penerbitan gagal", err.message);
     } finally {
@@ -52,12 +66,24 @@ export default function IssueCert() {
     }
   }
 
+  const tab = (key, label, Icon) => (
+    <button
+      type="button"
+      onClick={() => setMode(key)}
+      className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+        mode === key ? "bg-surface text-fg shadow-xs" : "text-fg-muted hover:text-fg"
+      }`}
+    >
+      <Icon className="h-4 w-4" strokeWidth={2} /> {label}
+    </button>
+  );
+
   return (
     <div className="space-y-5">
       <PageHeader
         crumbs={[{ label: orgName, to: `/orgs/${id}` }, { label: "Terbitkan" }]}
         title="Terbitkan sertifikat"
-        description="File di-pin ke IPFS; hash & CID dicatat di blockchain."
+        description="Generate PDF dari template, atau unggah file sendiri. Hash & CID dicatat di blockchain."
       />
 
       {result ? (
@@ -75,7 +101,11 @@ export default function IssueCert() {
             <div className="space-y-3">
               <CopyField label="Certificate ID" value={result.certificateId} />
               {result.verificationUrl && <CopyField label="Link verifikasi" value={result.verificationUrl} />}
-              <CopyField label="Data hash" value={result.dataHash} />
+              {result.fileUrl && (
+                <a href={result.fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm text-brand hover:underline">
+                  <Download className="h-4 w-4" /> Unduh PDF sertifikat
+                </a>
+              )}
             </div>
           </div>
           <div className="mt-5 flex flex-wrap gap-2">
@@ -84,17 +114,32 @@ export default function IssueCert() {
           </div>
         </Card>
       ) : (
-        <Card title="Detail sertifikat">
+        <Card>
+          <div className="mb-4 flex gap-1 rounded-xl bg-app p-1">
+            {tab("generate", "Generate PDF", Sparkles)}
+            {tab("upload", "Unggah file", Upload)}
+          </div>
           <form onSubmit={submit} className="space-y-4">
             {error && <Alert type="error">{error}</Alert>}
             <div className="grid gap-4 sm:grid-cols-2">
               <TextField id="recipientName" label="Nama penerima" required placeholder="mis. Budi Santoso" value={recipientName} onChange={(e) => setRecipientName(e.target.value)} disabled={loading} />
               <TextField id="recipientEmail" label="Email penerima" type="email" helper="Agar penerima bisa melihatnya di akunnya." placeholder="budi@email.com" value={recipientEmail} onChange={(e) => setRecipientEmail(e.target.value)} disabled={loading} />
             </div>
-            <FileField id="file" label="File sertifikat" required accept="application/pdf,image/*" fileName={file?.name} onChange={(e) => setFile(e.target.files?.[0] || null)} disabled={loading} helper="PDF atau gambar, maksimal 10 MB." />
-            <TextAreaField id="data" label="Metadata tambahan (opsional)" placeholder="mis. Sarjana Teknik Informatika — 2026" value={data} onChange={(e) => setData(e.target.value)} disabled={loading} helper="Disertakan ke dalam hash integritas (keccak256)." />
+
+            {mode === "generate" ? (
+              <SelectField id="templateKey" label="Template" value={templateKey} onChange={(e) => setTemplateKey(e.target.value)} disabled={loading || !templates.length} helper="Desain PDF sertifikat yang akan dibuat.">
+                {templates.length ? templates.map((t) => <option key={t.key} value={t.key}>{t.name}</option>) : <option value="classic">Classic</option>}
+              </SelectField>
+            ) : (
+              <FileField id="file" label="File sertifikat" required accept="application/pdf,image/*" fileName={file?.name} onChange={(e) => setFile(e.target.files?.[0] || null)} disabled={loading} helper="PDF atau gambar, maksimal 10 MB." />
+            )}
+
+            <TextAreaField id="data" label={mode === "generate" ? "Isi / deskripsi sertifikat (opsional)" : "Metadata tambahan (opsional)"} placeholder="mis. Sarjana Teknik Informatika — 2026" value={data} onChange={(e) => setData(e.target.value)} disabled={loading} helper="Tercetak di PDF (mode generate) & masuk hash integritas." />
+
             <div className="flex justify-end pt-1">
-              <Button type="submit" loading={loading} icon={Plus}>{loading ? "Memproses transaksi…" : "Terbitkan sertifikat"}</Button>
+              <Button type="submit" loading={loading} icon={mode === "generate" ? Sparkles : Plus}>
+                {loading ? "Memproses transaksi…" : mode === "generate" ? "Generate & terbitkan" : "Terbitkan sertifikat"}
+              </Button>
             </div>
           </form>
         </Card>
