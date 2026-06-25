@@ -1,9 +1,11 @@
 // src/pdf/templates/registry.js
 // Registry template PDF (Fase A: definisi di kode). Fase C: branding per-institusi via DB.
 const classic = require("./classic");
+const modern = require("./modern");
 
 const registry = {
   classic,
+  modern,
 };
 
 const DEFAULT_TEMPLATE = "classic";

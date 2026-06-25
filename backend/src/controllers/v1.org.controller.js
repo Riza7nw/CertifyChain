@@ -7,6 +7,7 @@ const db = require("../db");
 const storage = require("../storage");
 const blockchainService = require("../services/blockchain.service");
 const certificateService = require("../services/certificate.service");
+const templateService = require("../services/template.service");
 const asyncHandler = require("../utils/asyncHandler");
 const AppError = require("../utils/AppError");
 
@@ -191,7 +192,7 @@ const generateOrgCertificate = asyncHandler(async (req, res) => {
   const orgId = Number(req.params.orgId);
   const org = await loadOrg(orgId);
 
-  const { recipientName, recipientEmail, data, templateKey } = req.body || {};
+  const { recipientName, recipientEmail, data, template, templateKey } = req.body || {};
   if (!recipientName || typeof recipientName !== "string") {
     throw new AppError("Field 'recipientName' wajib diisi.", 400, "VALIDATION_ERROR");
   }
@@ -205,7 +206,8 @@ const generateOrgCertificate = asyncHandler(async (req, res) => {
     recipientName,
     recipientEmail,
     data,
-    templateKey,
+    template: template || templateKey, // ref: 'classic'|'modern'|'<id>'
+    orgId,
     issuedByLabel: req.authUser.email,
     ip: req.ip,
   });
@@ -213,9 +215,31 @@ const generateOrgCertificate = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, message: "Sertifikat PDF berhasil diterbitkan.", data: result });
 });
 
-/** GET /api/v1/certificate-templates — daftar template PDF yang tersedia. */
+/** GET /api/v1/certificate-templates — base templates global (kompat lama). */
 const listTemplates = asyncHandler(async (req, res) => {
   res.json({ success: true, data: certificateService.listTemplates() });
 });
 
-module.exports = { listMyOrgs, getOrgCertificates, getOrgStats, provisionOrg, issueOrgCertificate, generateOrgCertificate, listTemplates };
+/** GET /api/v1/orgs/:orgId/templates — base + global + template milik org. */
+const listOrgTemplates = asyncHandler(async (req, res) => {
+  res.json({ success: true, data: await templateService.listForOrg(Number(req.params.orgId)) });
+});
+
+/** POST /api/v1/orgs/:orgId/templates (OrgAdmin) — buat template ber-branding. */
+const createOrgTemplate = asyncHandler(async (req, res) => {
+  const orgId = Number(req.params.orgId);
+  const { name, key, accent } = req.body || {};
+  if (!name || typeof name !== "string") throw new AppError("Field 'name' wajib diisi.", 400, "VALIDATION_ERROR");
+  if (accent && !/^#[0-9a-fA-F]{6}$/.test(accent)) throw new AppError("Warna aksen harus hex #RRGGBB.", 400, "VALIDATION_ERROR");
+  const tpl = await templateService.create(orgId, { name, key, accent });
+  res.status(201).json({ success: true, message: "Template dibuat.", data: tpl });
+});
+
+/** DELETE /api/v1/orgs/:orgId/templates/:id (OrgAdmin). */
+const deleteOrgTemplate = asyncHandler(async (req, res) => {
+  const ok = await templateService.remove(Number(req.params.orgId), req.params.id);
+  if (!ok) throw new AppError("Template tidak ditemukan.", 404, "TEMPLATE_NOT_FOUND");
+  res.json({ success: true, message: "Template dihapus." });
+});
+
+module.exports = { listMyOrgs, getOrgCertificates, getOrgStats, provisionOrg, issueOrgCertificate, generateOrgCertificate, listTemplates, listOrgTemplates, createOrgTemplate, deleteOrgTemplate };

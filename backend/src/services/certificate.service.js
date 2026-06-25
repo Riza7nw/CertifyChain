@@ -8,6 +8,7 @@
 const blockchainService = require("./blockchain.service");
 const qrService = require("./qr.service");
 const audit = require("./audit.service");
+const templateService = require("./template.service");
 const pdf = require("../pdf");
 const storage = require("../storage");
 const db = require("../db");
@@ -101,13 +102,15 @@ async function issueToInstitution({
  * Mode GENERATE: render PDF dari template lalu lewatkan ke pipeline bersama.
  * QR ditanam di PDF -> certId harus dibuat dulu.
  */
-async function issueGenerated({ institutionId, institutionName, recipientName, recipientEmail, data, templateKey, issuedByLabel, ip }) {
+async function issueGenerated({ institutionId, institutionName, recipientName, recipientEmail, data, template, orgId, issuedByLabel, ip }) {
+  const tpl = await templateService.resolve(template || "classic", orgId);
   const certificateId = generateCertificateId();
   const issuedAtIso = new Date().toISOString();
   const issuedAtLabel = new Date(issuedAtIso).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
 
   const { buffer, templateKey: usedTemplate } = await pdf.generateCertificatePdf({
-    templateKey: templateKey || undefined,
+    templateKey: tpl.key,
+    accent: tpl.accent,
     certificateId,
     recipientName: recipientName.trim(),
     institutionName: institutionName || null,

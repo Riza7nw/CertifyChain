@@ -60,6 +60,23 @@ model certificates {
   @@map("certificates")
 }
 
+// PDF certificate (Fase C1): template ber-branding per-organisasi.
+// Postgres-only (identity store); read-model sqlite tak menyimpan ini.
+model certificate_templates {
+  id              Int      @id @default(autoincrement())
+  organization_id Int? // null = template global platform
+  key             String   @default("classic") // base renderer: 'classic' | 'modern'
+  name            String
+  accent          String? // warna aksen hex (mis. #5E4FDB)
+  logo_cid        String? // disiapkan utk logo (UI menyusul)
+  is_default      Boolean  @default(false)
+  active          Boolean  @default(true)
+  created_at      DateTime @default(now())
+
+  @@index([organization_id])
+  @@map("certificate_templates")
+}
+
 model verifications {
   id             Int      @id @default(autoincrement())
   certificate_id String?

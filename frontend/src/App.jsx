@@ -7,6 +7,7 @@ import Register from "./pages/Register";
 import OrgsPage from "./pages/OrgsPage";
 import OrgDashboard from "./pages/OrgDashboard";
 import IssueCert from "./pages/IssueCert";
+import Templates from "./pages/Templates";
 import MyCertificates from "./pages/MyCertificates";
 import AdminUsers from "./pages/AdminUsers";
 import AdminCertificates from "./pages/AdminCertificates";
@@ -44,6 +45,7 @@ export default function App() {
       <Route path="/" element={<Protected><OrgsPage /></Protected>} />
       <Route path="/orgs/:orgId" element={<Protected><OrgDashboard /></Protected>} />
       <Route path="/orgs/:orgId/issue" element={<Protected><IssueCert /></Protected>} />
+      <Route path="/orgs/:orgId/templates" element={<Protected><Templates /></Protected>} />
       <Route path="/me/certificates" element={<Protected><MyCertificates /></Protected>} />
       <Route path="/admin/users" element={<Protected><AdminUsers /></Protected>} />
       <Route path="/admin/certificates" element={<Protected><AdminCertificates /></Protected>} />

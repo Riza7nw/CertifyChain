@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Plus, RotateCcw, ExternalLink, Download, Sparkles, Upload } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { useToast } from "../components/Toast";
@@ -30,10 +30,12 @@ export default function IssueCert() {
   const [result, setResult] = useState(null);
 
   useEffect(() => {
-    apiFetch("/v1/certificate-templates")
-      .then((t) => { if (t?.length) { setTemplates(t); setTemplateKey(t[0].key); } })
+    apiFetch(`/v1/orgs/${id}/templates`)
+      .then((t) => { if (t?.length) { setTemplates(t); setTemplateKey(t[0].id); } })
       .catch(() => {});
-  }, [apiFetch]);
+  }, [apiFetch, id]);
+
+  const selectedAccent = templates.find((t) => t.id === templateKey)?.accent;
 
   async function submit(e) {
     e.preventDefault();
@@ -46,7 +48,7 @@ export default function IssueCert() {
       if (mode === "generate") {
         res = await apiFetch(`/v1/orgs/${id}/certificates/generate`, {
           method: "POST",
-          body: JSON.stringify({ recipientName: recipientName.trim(), recipientEmail: recipientEmail.trim() || undefined, data: data.trim() || undefined, templateKey }),
+          body: JSON.stringify({ recipientName: recipientName.trim(), recipientEmail: recipientEmail.trim() || undefined, data: data.trim() || undefined, template: templateKey }),
         });
       } else {
         const fd = new FormData();
@@ -127,9 +129,18 @@ export default function IssueCert() {
             </div>
 
             {mode === "generate" ? (
-              <SelectField id="templateKey" label="Template" value={templateKey} onChange={(e) => setTemplateKey(e.target.value)} disabled={loading || !templates.length} helper="Desain PDF sertifikat yang akan dibuat.">
-                {templates.length ? templates.map((t) => <option key={t.key} value={t.key}>{t.name}</option>) : <option value="classic">Classic</option>}
-              </SelectField>
+              <div>
+                <SelectField id="templateKey" label="Template" value={templateKey} onChange={(e) => setTemplateKey(e.target.value)} disabled={loading || !templates.length} helper="Desain & branding PDF sertifikat.">
+                  {templates.length ? templates.map((t) => <option key={t.id} value={t.id}>{t.name}{t.scope === "org" ? " (institusi)" : ""}</option>) : <option value="classic">Classic</option>}
+                </SelectField>
+                {selectedAccent && (
+                  <div className="mt-2 flex items-center gap-2 text-xs text-fg-faint">
+                    <span className="h-4 w-4 rounded-full border border-line" style={{ backgroundColor: selectedAccent }} />
+                    Warna aksen {selectedAccent}
+                    <Link to={`/orgs/${id}/templates`} className="ml-auto text-brand hover:underline">Kelola template</Link>
+                  </div>
+                )}
+              </div>
             ) : (
               <FileField id="file" label="File sertifikat" required accept="application/pdf,image/*" fileName={file?.name} onChange={(e) => setFile(e.target.files?.[0] || null)} disabled={loading} helper="PDF atau gambar, maksimal 10 MB." />
             )}

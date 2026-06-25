@@ -41,7 +41,12 @@ router.post(
   c.generateOrgCertificate
 );
 
-// Daftar template PDF (butuh login)
+// Daftar template PDF base (butuh login) — kompat lama
 router.get("/certificate-templates", authenticateUser, c.listTemplates);
+
+// Template ber-branding per-org (Fase C1)
+router.get("/orgs/:orgId/templates", authenticateUser, requireOrgRole(ANY_MEMBER), c.listOrgTemplates);
+router.post("/orgs/:orgId/templates", authenticateUser, requireOrgRole(CAN_ISSUE), c.createOrgTemplate);
+router.delete("/orgs/:orgId/templates/:id", authenticateUser, requireOrgRole(CAN_ISSUE), c.deleteOrgTemplate);
 
 module.exports = router;

@@ -16,7 +16,7 @@ async function lib() {
  * Render PDF sertifikat profesional.
  * @returns {Promise<{ buffer: Buffer, templateKey: string, verificationUrl: string, qrDataUrl: string }>}
  */
-async function generateCertificatePdf({ templateKey = DEFAULT_TEMPLATE, certificateId, recipientName, institutionName, issuedAt, body }) {
+async function generateCertificatePdf({ templateKey = DEFAULT_TEMPLATE, accent, certificateId, recipientName, institutionName, issuedAt, body }) {
   const RP = await lib();
   const React = require("react");
 
@@ -28,7 +28,7 @@ async function generateCertificatePdf({ templateKey = DEFAULT_TEMPLATE, certific
     RP,
     React,
     qrDataUrl,
-    data: { recipientName, institutionName, issuedAt, certificateId, body, verificationUrl },
+    data: { recipientName, institutionName, issuedAt, certificateId, body, verificationUrl, accent },
   });
 
   const rendered = await RP.renderToBuffer(element);

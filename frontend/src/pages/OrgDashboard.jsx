@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Plus, ExternalLink, ScrollText, ShieldCheck, FileText } from "lucide-react";
+import { Plus, ExternalLink, ScrollText, ShieldCheck, FileText, Palette } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { useToast } from "../components/Toast";
 import Card from "../components/Card";
@@ -79,11 +79,16 @@ export default function OrgDashboard() {
         title={orgName}
         description={`Peran Anda: ${role || "—"}`}
         actions={
-          canIssue && provisioned ? (
-            <Link to={`/orgs/${id}/issue`}><Button icon={Plus}>Terbitkan</Button></Link>
-          ) : isPlatformAdmin && data && !provisioned ? (
-            <Button onClick={provision} loading={provisioning} icon={ShieldCheck}>Provision on-chain</Button>
-          ) : null
+          <>
+            {canIssue && (
+              <Link to={`/orgs/${id}/templates`}><Button variant="secondary" icon={Palette}>Template</Button></Link>
+            )}
+            {canIssue && provisioned ? (
+              <Link to={`/orgs/${id}/issue`}><Button icon={Plus}>Terbitkan</Button></Link>
+            ) : isPlatformAdmin && data && !provisioned ? (
+              <Button onClick={provision} loading={provisioning} icon={ShieldCheck}>Provision on-chain</Button>
+            ) : null}
+          </>
         }
       />
 

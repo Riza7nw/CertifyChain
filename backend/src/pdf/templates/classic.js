@@ -2,7 +2,6 @@
 // Template "Classic" — sertifikat A4 landscape, tanpa JSX (React.createElement)
 // karena backend CommonJS tanpa bundler. Aksen violet (selaras brand).
 
-const BRAND = "#5E4FDB";
 const INK = "#18181B";
 const MUTED = "#5B5D66";
 const LINE = "#E5E7EB";
@@ -10,7 +9,8 @@ const LINE = "#E5E7EB";
 function build({ RP, React, data, qrDataUrl }) {
   const h = React.createElement;
   const { Document, Page, View, Text, Image, StyleSheet } = RP;
-  const { recipientName, institutionName, issuedAt, certificateId, body, verificationUrl } = data;
+  const { recipientName, institutionName, issuedAt, certificateId, body, verificationUrl, accent } = data;
+  const BRAND = accent || "#5E4FDB";
 
   const s = StyleSheet.create({
     page: { padding: 22, backgroundColor: "#FFFFFF", fontFamily: "Helvetica" },
