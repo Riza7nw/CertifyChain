@@ -9,7 +9,7 @@ export default function RequireAuth({ children }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center text-slate-500">
+      <div className="flex min-h-screen items-center justify-center text-fg-muted">
         <Spinner className="h-6 w-6" />
         <span className="ml-3 text-sm">Memuat sesi…</span>
       </div>

@@ -41,8 +41,8 @@ export default function AdminCertificates() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Semua Sertifikat</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="text-2xl font-bold text-fg">Semua Sertifikat</h1>
+        <p className="mt-1 text-sm text-fg-muted">
           {data ? `${data.pagination.total} sertifikat` : "Seluruh sertifikat lintas institusi."}
         </p>
       </div>
@@ -51,7 +51,7 @@ export default function AdminCertificates() {
 
       <Card>
         {loading && !data ? (
-          <div className="flex items-center gap-3 py-6 text-slate-500">
+          <div className="flex items-center gap-3 py-6 text-fg-muted">
             <Spinner className="h-5 w-5" /><span className="text-sm">Memuat…</span>
           </div>
         ) : data?.items?.length ? (
@@ -59,7 +59,7 @@ export default function AdminCertificates() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-400">
+                  <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-fg-faint">
                     <th className="py-2 pr-3">Penerima</th>
                     <th className="py-2 pr-3">Institusi</th>
                     <th className="py-2 pr-3">Diterbitkan</th>
@@ -70,31 +70,31 @@ export default function AdminCertificates() {
                 </thead>
                 <tbody>
                   {data.items.map((c) => (
-                    <tr key={c.certificateId} className="border-b border-slate-50">
+                    <tr key={c.certificateId} className="border-b border-line">
                       <td className="py-2.5 pr-3">
-                        <p className="font-medium text-slate-800">{c.recipientName || "—"}</p>
-                        {c.recipientEmail && <p className="text-xs text-slate-400">{c.recipientEmail}</p>}
+                        <p className="font-medium text-fg">{c.recipientName || "—"}</p>
+                        {c.recipientEmail && <p className="text-xs text-fg-faint">{c.recipientEmail}</p>}
                       </td>
-                      <td className="py-2.5 pr-3 text-slate-600">#{c.institutionId}</td>
-                      <td className="py-2.5 pr-3 text-slate-500">
+                      <td className="py-2.5 pr-3 text-fg-muted">#{c.institutionId}</td>
+                      <td className="py-2.5 pr-3 text-fg-muted">
                         {c.issuedAt ? new Date(c.issuedAt).toLocaleDateString("id-ID") : "—"}
                       </td>
                       <td className="py-2.5 pr-3">
                         {c.status === "revoked" ? (
-                          <span className="text-red-600">Dicabut</span>
+                          <span className="text-danger-fg">Dicabut</span>
                         ) : (
-                          <span className="text-emerald-600">Aktif</span>
+                          <span className="text-success-fg">Aktif</span>
                         )}
                       </td>
                       <td className="py-2.5 pr-3">
                         {c.fileUrl ? (
-                          <a href={c.fileUrl} target="_blank" rel="noreferrer" className="text-brand-600 hover:underline">📄</a>
+                          <a href={c.fileUrl} target="_blank" rel="noreferrer" className="text-brand hover:underline">📄</a>
                         ) : (
                           "—"
                         )}
                       </td>
                       <td className="py-2.5">
-                        <Link to={`/verify/${c.certificateId}`} className="text-brand-600 hover:underline">verify</Link>
+                        <Link to={`/verify/${c.certificateId}`} className="text-brand hover:underline">verify</Link>
                       </td>
                     </tr>
                   ))}
@@ -104,13 +104,13 @@ export default function AdminCertificates() {
             {data.pagination.totalPages > 1 && (
               <div className="mt-4 flex items-center justify-between text-sm">
                 <Button variant="secondary" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>← Sebelumnya</Button>
-                <span className="text-slate-500">Hal {data.pagination.page} / {data.pagination.totalPages}</span>
+                <span className="text-fg-muted">Hal {data.pagination.page} / {data.pagination.totalPages}</span>
                 <Button variant="secondary" disabled={page >= data.pagination.totalPages} onClick={() => setPage((p) => p + 1)}>Berikutnya →</Button>
               </div>
             )}
           </>
         ) : (
-          <p className="text-sm text-slate-500">Belum ada sertifikat.</p>
+          <p className="text-sm text-fg-muted">Belum ada sertifikat.</p>
         )}
       </Card>
     </div>

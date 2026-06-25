@@ -2,7 +2,79 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Base styling untuk seluruh aplikasi */
+/* ============================================================
+   Design tokens (Phase 8) — light + dark.
+   Semua warna UI mengalir dari variabel ini; util Tailwind
+   (bg-app, text-fg, border-line, bg-brand, dst.) memetakannya.
+   ============================================================ */
+:root {
+  --bg: #f6f7f9;
+  --bg-subtle: #fbfbfc;
+  --surface: #ffffff;
+  --surface-hover: #f3f4f6;
+  --border: rgba(17, 18, 23, 0.08);
+  --border-strong: rgba(17, 18, 23, 0.14);
+  --text: #18181b;
+  --text-muted: #5b5d66;
+  --text-faint: #8a8d98;
+
+  --brand: #5e4fdb;
+  --brand-hover: #4e3fc0;
+  --brand-fg: #ffffff;
+  --brand-subtle: rgba(94, 79, 219, 0.1);
+  --brand-subtle-fg: #4e3fc0;
+
+  --success: #15935e;
+  --success-subtle: rgba(21, 147, 94, 0.12);
+  --success-fg: #0f6e46;
+  --warning: #b5731a;
+  --warning-subtle: rgba(181, 115, 26, 0.14);
+  --warning-fg: #8a560f;
+  --danger: #d8453c;
+  --danger-subtle: rgba(216, 69, 60, 0.12);
+  --danger-fg: #a12d26;
+  --info: #2d6fd8;
+  --info-subtle: rgba(45, 111, 216, 0.12);
+  --info-fg: #1f539e;
+
+  --ring: rgba(94, 79, 219, 0.45);
+  color-scheme: light;
+}
+
+.dark {
+  --bg: #0b0b0f;
+  --bg-subtle: #121318;
+  --surface: #16171d;
+  --surface-hover: #1d1f26;
+  --border: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --text: #f2f2f5;
+  --text-muted: #a0a2ad;
+  --text-faint: #6e707b;
+
+  --brand: #7e72ef;
+  --brand-hover: #9389f2;
+  --brand-fg: #ffffff;
+  --brand-subtle: rgba(126, 114, 239, 0.16);
+  --brand-subtle-fg: #b9b2f7;
+
+  --success: #34c088;
+  --success-subtle: rgba(52, 192, 136, 0.15);
+  --success-fg: #5bd3a2;
+  --warning: #e0a33c;
+  --warning-subtle: rgba(224, 163, 60, 0.15);
+  --warning-fg: #f0c173;
+  --danger: #f0635b;
+  --danger-subtle: rgba(240, 99, 91, 0.15);
+  --danger-fg: #f49892;
+  --info: #5b9bf0;
+  --info-subtle: rgba(91, 155, 240, 0.15);
+  --info-fg: #8fbcf5;
+
+  --ring: rgba(126, 114, 239, 0.5);
+  color-scheme: dark;
+}
+
 html,
 body,
 #root {
@@ -10,21 +82,42 @@ body,
 }
 
 body {
-  @apply bg-slate-100 text-slate-800 antialiased;
+  @apply bg-app text-fg antialiased;
+  font-feature-settings: "cv11", "ss01";
 }
 
-/* Animasi halus saat konten muncul */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Scrollbar halus (selaras tema) */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
 }
 
-.animate-fade-in {
-  animation: fadeInUp 0.25s ease-out;
+/* Skeleton shimmer */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-hover);
+}
+.skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  animation: shimmer 1.5s infinite;
+}
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }

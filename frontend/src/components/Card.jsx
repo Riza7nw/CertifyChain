@@ -1,15 +1,18 @@
-// Container kartu ala dashboard SaaS.
-export default function Card({ title, description, children, className = "", footer }) {
+// Kartu permukaan (Phase 8) — token-based. Header opsional (title/description/action) + footer.
+export default function Card({ title, description, action, children, className = "", bodyClassName = "px-5 py-4", footer }) {
   return (
-    <section className={`rounded-2xl border border-slate-200 bg-white shadow-sm ${className}`}>
-      {(title || description) && (
-        <header className="border-b border-slate-100 px-6 py-4">
-          {title && <h2 className="text-base font-semibold text-slate-900">{title}</h2>}
-          {description && <p className="mt-0.5 text-sm text-slate-500">{description}</p>}
+    <section className={`rounded-xl border border-line bg-surface shadow-xs ${className}`}>
+      {(title || description || action) && (
+        <header className="flex items-start justify-between gap-3 border-b border-line px-5 py-3.5">
+          <div>
+            {title && <h2 className="text-[15px] font-medium text-fg">{title}</h2>}
+            {description && <p className="mt-0.5 text-sm text-fg-muted">{description}</p>}
+          </div>
+          {action && <div className="flex-shrink-0">{action}</div>}
         </header>
       )}
-      <div className="px-6 py-5">{children}</div>
-      {footer && <footer className="border-t border-slate-100 px-6 py-4">{footer}</footer>}
+      <div className={bodyClassName}>{children}</div>
+      {footer && <footer className="border-t border-line px-5 py-3.5">{footer}</footer>}
     </section>
   );
 }

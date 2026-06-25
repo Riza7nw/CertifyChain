@@ -76,8 +76,8 @@ export default function AdminUsers() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Kelola User</h1>
-        <p className="mt-1 text-sm text-slate-500">Atur peran, status aktif, dan hapus akun pengguna.</p>
+        <h1 className="text-2xl font-bold text-fg">Kelola User</h1>
+        <p className="mt-1 text-sm text-fg-muted">Atur peran, status aktif, dan hapus akun pengguna.</p>
       </div>
 
       {error && <Alert type="error">{error}</Alert>}
@@ -111,7 +111,7 @@ export default function AdminUsers() {
 
       <Card>
         {loading && !data ? (
-          <div className="flex items-center gap-3 py-6 text-slate-500">
+          <div className="flex items-center gap-3 py-6 text-fg-muted">
             <Spinner className="h-5 w-5" /><span className="text-sm">Memuat…</span>
           </div>
         ) : data?.items?.length ? (
@@ -119,7 +119,7 @@ export default function AdminUsers() {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-400">
+                  <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-fg-faint">
                     <th className="py-2 pr-3">User</th>
                     <th className="py-2 pr-3">Role</th>
                     <th className="py-2 pr-3">Status</th>
@@ -131,21 +131,21 @@ export default function AdminUsers() {
                     const self = u.id === user?.id;
                     const busy = busyId === u.id;
                     return (
-                      <tr key={u.id} className="border-b border-slate-50 align-top">
+                      <tr key={u.id} className="border-b border-line align-top">
                         <td className="py-3 pr-3">
-                          <p className="font-medium text-slate-800">
-                            {u.email} {self && <span className="text-xs text-slate-400">(Anda)</span>}
+                          <p className="font-medium text-fg">
+                            {u.email} {self && <span className="text-xs text-fg-faint">(Anda)</span>}
                           </p>
-                          <p className="text-xs text-slate-400">
+                          <p className="text-xs text-fg-faint">
                             {u.name || "—"} •{" "}
                             {u.emailVerified ? (
-                              <span className="text-emerald-600">email terverifikasi</span>
+                              <span className="text-success-fg">email terverifikasi</span>
                             ) : (
-                              <span className="text-amber-600">belum verifikasi</span>
+                              <span className="text-warning-fg">belum verifikasi</span>
                             )}
                           </p>
                           {u.memberships?.length > 0 && (
-                            <p className="mt-0.5 text-xs text-slate-400">
+                            <p className="mt-0.5 text-xs text-fg-faint">
                               {u.memberships.map((m) => `${m.orgName} (${m.role})`).join(", ")}
                             </p>
                           )}
@@ -155,7 +155,7 @@ export default function AdminUsers() {
                             value={u.role}
                             disabled={self || busy}
                             onChange={(e) => patch(u.id, { role: e.target.value })}
-                            className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-sm disabled:bg-slate-50 disabled:text-slate-400"
+                            className="rounded-lg border border-line-strong bg-surface px-2 py-1 text-sm text-fg disabled:bg-surface-hover disabled:text-fg-faint"
                           >
                             <option value="user">user</option>
                             <option value="admin">admin</option>
@@ -163,9 +163,9 @@ export default function AdminUsers() {
                         </td>
                         <td className="py-3 pr-3">
                           {u.active ? (
-                            <span className="text-emerald-600">Aktif</span>
+                            <span className="text-success-fg">Aktif</span>
                           ) : (
-                            <span className="text-slate-400">Nonaktif</span>
+                            <span className="text-fg-faint">Nonaktif</span>
                           )}
                         </td>
                         <td className="py-3">
@@ -180,7 +180,7 @@ export default function AdminUsers() {
                             </Button>
                             <Button
                               variant="ghost"
-                              className="text-red-600 hover:bg-red-50"
+                              className="text-danger-fg hover:bg-danger-subtle"
                               disabled={self || busy}
                               onClick={() => remove(u)}
                             >
@@ -197,13 +197,13 @@ export default function AdminUsers() {
             {data.pagination.totalPages > 1 && (
               <div className="mt-4 flex items-center justify-between text-sm">
                 <Button variant="secondary" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>← Sebelumnya</Button>
-                <span className="text-slate-500">Hal {data.pagination.page} / {data.pagination.totalPages}</span>
+                <span className="text-fg-muted">Hal {data.pagination.page} / {data.pagination.totalPages}</span>
                 <Button variant="secondary" disabled={page >= data.pagination.totalPages} onClick={() => setPage((p) => p + 1)}>Berikutnya →</Button>
               </div>
             )}
           </>
         ) : (
-          <p className="text-sm text-slate-500">Tidak ada user yang cocok.</p>
+          <p className="text-sm text-fg-muted">Tidak ada user yang cocok.</p>
         )}
       </Card>
     </div>

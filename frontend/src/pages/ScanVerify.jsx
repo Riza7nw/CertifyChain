@@ -36,8 +36,8 @@ export default function ScanVerify() {
   return (
     <div className="space-y-5 animate-fade-in">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-slate-900">Verifikasi Sertifikat</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="text-2xl font-bold text-fg">Verifikasi Sertifikat</h1>
+        <p className="mt-1 text-sm text-fg-muted">
           Pindai QR Code pada sertifikat, atau masukkan Certificate ID secara manual.
         </p>
       </div>
@@ -47,7 +47,7 @@ export default function ScanVerify() {
       <Card title="Pindai QR Code">
         <Suspense
           fallback={
-            <div className="flex items-center justify-center gap-3 py-8 text-slate-500">
+            <div className="flex items-center justify-center gap-3 py-8 text-fg-muted">
               <Spinner className="h-5 w-5" />
               <span className="text-sm">Memuat pemindai…</span>
             </div>

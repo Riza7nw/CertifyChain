@@ -83,7 +83,7 @@ export default function MyCertificates() {
   if (!emailVerified) {
     return (
       <div className="space-y-6 animate-fade-in">
-        <h1 className="text-2xl font-bold text-slate-900">Sertifikat Saya</h1>
+        <h1 className="text-2xl font-bold text-fg">Sertifikat Saya</h1>
         <Card>
           <Alert type="warning" title="Email belum diverifikasi">
             Verifikasi email <span className="font-semibold">{user?.email}</span> untuk melihat dan mengunduh
@@ -92,7 +92,7 @@ export default function MyCertificates() {
           <div className="mt-4">
             <Button onClick={resendVerification}>Kirim ulang email verifikasi</Button>
           </div>
-          {resendMsg && <p className="mt-3 text-sm text-slate-600">{resendMsg}</p>}
+          {resendMsg && <p className="mt-3 text-sm text-fg-muted">{resendMsg}</p>}
         </Card>
       </div>
     );
@@ -101,8 +101,8 @@ export default function MyCertificates() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Sertifikat Saya</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="text-2xl font-bold text-fg">Sertifikat Saya</h1>
+        <p className="mt-1 text-sm text-fg-muted">
           Sertifikat yang diterbitkan untuk <span className="font-medium">{user?.email}</span>.
         </p>
       </div>
@@ -111,7 +111,7 @@ export default function MyCertificates() {
 
       <Card>
         {loading && !data ? (
-          <div className="flex items-center gap-3 py-6 text-slate-500">
+          <div className="flex items-center gap-3 py-6 text-fg-muted">
             <Spinner className="h-5 w-5" />
             <span className="text-sm">Memuat…</span>
           </div>
@@ -123,25 +123,25 @@ export default function MyCertificates() {
                 return (
                   <div
                     key={c.certificateId}
-                    className="flex flex-col gap-3 rounded-xl border border-slate-100 p-4 sm:flex-row sm:items-center sm:justify-between"
+                    className="flex flex-col gap-3 rounded-xl border border-line p-4 sm:flex-row sm:items-center sm:justify-between"
                   >
                     <div className="min-w-0">
-                      <p className="truncate font-medium text-slate-800">{c.recipientName || "Sertifikat"}</p>
-                      <p className="mt-0.5 text-xs text-slate-400">
+                      <p className="truncate font-medium text-fg">{c.recipientName || "Sertifikat"}</p>
+                      <p className="mt-0.5 text-xs text-fg-faint">
                         {c.issuedAt ? new Date(c.issuedAt).toLocaleDateString("id-ID") : "—"} •{" "}
                         {c.status === "revoked" ? (
-                          <span className="text-red-600">Dicabut</span>
+                          <span className="text-danger-fg">Dicabut</span>
                         ) : (
-                          <span className="text-emerald-600">Aktif</span>
+                          <span className="text-success-fg">Aktif</span>
                         )}
                       </p>
-                      <code className="mt-1 block truncate font-mono text-xs text-slate-400">{c.certificateId}</code>
+                      <code className="mt-1 block truncate font-mono text-xs text-fg-faint">{c.certificateId}</code>
                       {st && (
                         <p className="mt-1 text-xs font-medium">
                           {st.onChainValid ? (
-                            <span className="text-emerald-600">● Asli & tercatat on-chain</span>
+                            <span className="text-success-fg">● Asli & tercatat on-chain</span>
                           ) : (
-                            <span className="text-red-600">● Tidak valid / dicabut on-chain</span>
+                            <span className="text-danger-fg">● Tidak valid / dicabut on-chain</span>
                           )}
                         </p>
                       )}
@@ -171,7 +171,7 @@ export default function MyCertificates() {
                 <Button variant="secondary" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>
                   ← Sebelumnya
                 </Button>
-                <span className="text-slate-500">
+                <span className="text-fg-muted">
                   Hal {data.pagination.page} / {data.pagination.totalPages}
                 </span>
                 <Button
@@ -186,8 +186,8 @@ export default function MyCertificates() {
           </>
         ) : (
           <div className="py-6 text-center">
-            <p className="text-sm text-slate-500">Belum ada sertifikat yang ditujukan ke email Anda.</p>
-            <Link to="/search" className="mt-2 inline-block text-sm text-brand-600 hover:underline">
+            <p className="text-sm text-fg-muted">Belum ada sertifikat yang ditujukan ke email Anda.</p>
+            <Link to="/search" className="mt-2 inline-block text-sm text-brand hover:underline">
               Cari sertifikat publik →
             </Link>
           </div>

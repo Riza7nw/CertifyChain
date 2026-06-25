@@ -1,6 +1,7 @@
 import { useState } from "react";
+import { Check, Copy } from "lucide-react";
 
-// Menampilkan nilai panjang (hash/id/tx) dalam kotak monospace + tombol salin.
+// Nilai panjang (hash/id/tx) dalam kotak mono + tombol salin (Phase 8, token-based).
 export default function CopyField({ label, value }) {
   const [copied, setCopied] = useState(false);
 
@@ -10,21 +11,22 @@ export default function CopyField({ label, value }) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      /* clipboard tidak tersedia (mis. http non-secure) */
+      /* clipboard tak tersedia (http non-secure) */
     }
   }
 
   return (
     <div>
-      {label && <p className="mb-1 text-xs font-medium uppercase tracking-wide text-slate-400">{label}</p>}
-      <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-        <code className="flex-1 break-all font-mono text-xs text-slate-700">{value}</code>
+      {label && <p className="mb-1 text-xs font-medium text-fg-faint">{label}</p>}
+      <div className="flex items-center gap-2 rounded-lg border border-line bg-app px-3 py-2">
+        <code className="flex-1 break-all font-mono text-xs text-fg-muted">{value}</code>
         <button
           type="button"
           onClick={handleCopy}
-          className="flex-shrink-0 rounded-md px-2 py-1 text-xs font-medium text-brand-600 hover:bg-brand-50"
+          className="flex flex-shrink-0 items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-brand hover:bg-brand-subtle"
         >
-          {copied ? "Tersalin ✓" : "Salin"}
+          {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+          {copied ? "Tersalin" : "Salin"}
         </button>
       </div>
     </div>

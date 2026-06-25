@@ -12,12 +12,12 @@ function VerdictBanner({ valid }) {
   return (
     <div
       className={`flex flex-col items-center gap-2 rounded-2xl border px-6 py-8 text-center ${
-        valid ? "border-emerald-200 bg-emerald-50" : "border-red-200 bg-red-50"
+        valid ? "border-line bg-success-subtle" : "border-line bg-danger-subtle"
       }`}
     >
       <div
         className={`flex h-16 w-16 items-center justify-center rounded-full ${
-          valid ? "bg-emerald-500" : "bg-red-500"
+          valid ? "bg-success" : "bg-danger"
         } text-white`}
       >
         <svg className="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -28,10 +28,10 @@ function VerdictBanner({ valid }) {
           )}
         </svg>
       </div>
-      <p className={`text-xl font-bold ${valid ? "text-emerald-800" : "text-red-800"}`}>
+      <p className={`text-xl font-bold ${valid ? "text-success-fg" : "text-danger-fg"}`}>
         {valid ? "Sertifikat Terverifikasi" : "Sertifikat Tidak Valid"}
       </p>
-      <p className={`text-sm ${valid ? "text-emerald-700" : "text-red-700"}`}>
+      <p className={`text-sm ${valid ? "text-success-fg" : "text-danger-fg"}`}>
         {valid
           ? "Sertifikat ini asli dan tercatat di blockchain."
           : "Sertifikat tidak ditemukan atau telah dicabut."}
@@ -42,9 +42,9 @@ function VerdictBanner({ valid }) {
 
 function DetailRow({ label, children }) {
   return (
-    <div className="flex flex-col gap-0.5 border-b border-slate-100 py-3 last:border-0 sm:flex-row sm:justify-between sm:gap-4">
-      <span className="text-sm text-slate-500">{label}</span>
-      <span className="break-all text-sm font-medium text-slate-900 sm:text-right">{children}</span>
+    <div className="flex flex-col gap-0.5 border-b border-line py-3 last:border-0 sm:flex-row sm:justify-between sm:gap-4">
+      <span className="text-sm text-fg-muted">{label}</span>
+      <span className="break-all text-sm font-medium text-fg sm:text-right">{children}</span>
     </div>
   );
 }
@@ -86,7 +86,7 @@ export default function PublicVerify() {
   return (
     <div className="space-y-5 animate-fade-in">
       {loading && (
-        <div className="flex items-center justify-center gap-3 py-16 text-slate-500">
+        <div className="flex items-center justify-center gap-3 py-16 text-fg-muted">
           <Spinner className="h-6 w-6" />
           <span className="text-sm">Memverifikasi ke blockchain…</span>
         </div>
@@ -109,7 +109,7 @@ export default function PublicVerify() {
 
           {result.detail && (
             <Card title="Detail Sertifikat">
-              <div className="rounded-xl bg-slate-50 px-4 py-2">
+              <div className="rounded-xl bg-surface-hover px-4 py-2">
                 <DetailRow label="Nama Penerima">{result.detail.recipientName || "—"}</DetailRow>
                 <DetailRow label="Penerbit">{result.detail.institutionName || "—"}</DetailRow>
                 <DetailRow label="Status">{result.detail.isValid ? "Aktif" : "Dicabut"}</DetailRow>
@@ -122,7 +122,7 @@ export default function PublicVerify() {
                       href={result.detail.fileUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="font-semibold text-brand-600 hover:underline"
+                      className="font-semibold text-brand hover:underline"
                     >
                       📄 Buka file (IPFS)
                     </a>

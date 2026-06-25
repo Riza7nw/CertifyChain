@@ -45,8 +45,8 @@ export default function PublicSearch() {
   return (
     <div className="space-y-5 animate-fade-in">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-slate-900">Cari Sertifikat</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="text-2xl font-bold text-fg">Cari Sertifikat</h1>
+        <p className="mt-1 text-sm text-fg-muted">
           Cari berdasarkan Certificate ID dan/atau nama institusi penerbit.
         </p>
       </div>
@@ -82,7 +82,7 @@ export default function PublicSearch() {
       {error && <Alert type="error">{error}</Alert>}
 
       {loading && !data && (
-        <div className="flex items-center justify-center gap-3 py-8 text-slate-500">
+        <div className="flex items-center justify-center gap-3 py-8 text-fg-muted">
           <Spinner className="h-5 w-5" /><span className="text-sm">Mencari…</span>
         </div>
       )}
@@ -90,22 +90,22 @@ export default function PublicSearch() {
       {data && (
         <Card title={`Hasil (${data.pagination.total})`}>
           {data.items.length === 0 ? (
-            <p className="text-sm text-slate-500">Tidak ada sertifikat yang cocok.</p>
+            <p className="text-sm text-fg-muted">Tidak ada sertifikat yang cocok.</p>
           ) : (
             <>
               <div className="space-y-3">
                 {data.items.map((c) => (
-                  <div key={c.certificateId} className="rounded-xl border border-slate-100 p-4">
+                  <div key={c.certificateId} className="rounded-xl border border-line p-4">
                     <div className="flex flex-wrap items-start justify-between gap-2">
                       <div className="min-w-0">
-                        <p className="font-medium text-slate-800">{c.institutionName || "Institusi —"}</p>
-                        <code className="mt-0.5 block truncate font-mono text-xs text-slate-400">{c.certificateId}</code>
-                        <p className="mt-1 text-xs text-slate-400">
+                        <p className="font-medium text-fg">{c.institutionName || "Institusi —"}</p>
+                        <code className="mt-0.5 block truncate font-mono text-xs text-fg-faint">{c.certificateId}</code>
+                        <p className="mt-1 text-xs text-fg-faint">
                           {c.issuedAt ? new Date(c.issuedAt).toLocaleDateString("id-ID") : "—"} •{" "}
                           {c.status === "revoked" ? (
-                            <span className="text-red-600">Dicabut</span>
+                            <span className="text-danger-fg">Dicabut</span>
                           ) : (
-                            <span className="text-emerald-600">Aktif</span>
+                            <span className="text-success-fg">Aktif</span>
                           )}
                         </p>
                       </div>
@@ -119,7 +119,7 @@ export default function PublicSearch() {
               {data.pagination.totalPages > 1 && (
                 <div className="mt-4 flex items-center justify-between text-sm">
                   <Button variant="secondary" disabled={page <= 1} onClick={() => run(page - 1)}>← Sebelumnya</Button>
-                  <span className="text-slate-500">Hal {data.pagination.page} / {data.pagination.totalPages}</span>
+                  <span className="text-fg-muted">Hal {data.pagination.page} / {data.pagination.totalPages}</span>
                   <Button variant="secondary" disabled={page >= data.pagination.totalPages} onClick={() => run(page + 1)}>Berikutnya →</Button>
                 </div>
               )}

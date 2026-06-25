@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import Layout from "./components/Layout";
-import PublicLayout from "./components/PublicLayout";
+import AppShell from "./components/shell/AppShell";
+import PublicShell from "./components/shell/PublicShell";
 import RequireAuth from "./components/RequireAuth";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -21,7 +21,7 @@ import ScanVerify from "./pages/ScanVerify";
 function Protected({ children }) {
   return (
     <RequireAuth>
-      <Layout>{children}</Layout>
+      <AppShell>{children}</AppShell>
     </RequireAuth>
   );
 }
@@ -34,9 +34,9 @@ export default function App() {
       <Route path="/register" element={<Register />} />
 
       {/* Publik (tanpa login) */}
-      <Route path="/scan" element={<PublicLayout><ScanVerify /></PublicLayout>} />
-      <Route path="/search" element={<PublicLayout><PublicSearch /></PublicLayout>} />
-      <Route path="/verify/:id" element={<PublicLayout><PublicVerify /></PublicLayout>} />
+      <Route path="/scan" element={<PublicShell><ScanVerify /></PublicShell>} />
+      <Route path="/search" element={<PublicShell><PublicSearch /></PublicShell>} />
+      <Route path="/verify/:id" element={<PublicShell><PublicVerify /></PublicShell>} />
 
       {/* Dashboard (butuh login) */}
       <Route path="/" element={<Protected><OrgsPage /></Protected>} />

@@ -46,19 +46,19 @@ export default function IssueCert() {
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <Link to={`/orgs/${id}`} className="text-xs text-brand-600 hover:underline">← Dashboard organisasi</Link>
-        <h1 className="text-2xl font-bold text-slate-900">Terbitkan Sertifikat</h1>
-        <p className="mt-1 text-sm text-slate-500">File akan di-pin ke IPFS, hash & CID dicatat di blockchain.</p>
+        <Link to={`/orgs/${id}`} className="text-xs text-brand hover:underline">← Dashboard organisasi</Link>
+        <h1 className="text-2xl font-bold text-fg">Terbitkan Sertifikat</h1>
+        <p className="mt-1 text-sm text-fg-muted">File akan di-pin ke IPFS, hash & CID dicatat di blockchain.</p>
       </div>
 
       {result && (
-        <Card className="border-emerald-200">
+        <Card className="border-line">
           <Alert type="success" title="Sertifikat berhasil diterbitkan!">Bagikan QR / link verifikasi di bawah.</Alert>
           <div className="mt-4 grid gap-5 sm:grid-cols-[170px,1fr] sm:items-start">
             {result.qrCode && (
               <div className="flex flex-col items-center gap-2">
-                <img src={result.qrCode} alt="QR" className="h-40 w-40 rounded-xl border border-slate-200 bg-white p-2" />
-                <a href={result.qrCode} download={`qr-${result.certificateId.slice(0, 10)}.png`} className="text-xs font-semibold text-brand-600 hover:underline">⬇ Unduh QR</a>
+                <img src={result.qrCode} alt="QR" className="h-40 w-40 rounded-xl border border-line-strong bg-white p-2" />
+                <a href={result.qrCode} download={`qr-${result.certificateId.slice(0, 10)}.png`} className="text-xs font-semibold text-brand hover:underline">⬇ Unduh QR</a>
               </div>
             )}
             <div className="space-y-3">

@@ -87,7 +87,7 @@ export default function QrScanner({ onResult }) {
       {/* Area render kamera / preview gambar */}
       <div
         id={REGION_ID}
-        className="mx-auto w-full max-w-xs overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
+        className="mx-auto w-full max-w-xs overflow-hidden rounded-xl border border-line-strong bg-surface-hover"
         style={{ minHeight: active ? undefined : 0 }}
       />
 
@@ -102,7 +102,7 @@ export default function QrScanner({ onResult }) {
           </Button>
         )}
 
-        <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+        <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-fg transition hover:bg-surface-hover">
           Unggah Gambar QR
           <input type="file" accept="image/*" className="hidden" onChange={handleFile} />
         </label>
