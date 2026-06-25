@@ -4,9 +4,9 @@ module.exports = (db) => {
   // maupun indexer (dari event, tanpa recipient_name -> COALESCE menjaga nilai lama).
   const upsertStmt = db.prepare(`
     INSERT INTO certificates
-      (certificate_id, institution_id, recipient_name, recipient_email, file_cid, data_hash, issued_by, status, tx_hash, block_number, issued_at)
+      (certificate_id, institution_id, recipient_name, recipient_email, file_cid, data_hash, issued_by, status, tx_hash, block_number, issued_at, template_key, artifact_type, pdf_hash, signed, render_status)
     VALUES
-      (@certificate_id, @institution_id, @recipient_name, @recipient_email, @file_cid, @data_hash, @issued_by, @status, @tx_hash, @block_number, @issued_at)
+      (@certificate_id, @institution_id, @recipient_name, @recipient_email, @file_cid, @data_hash, @issued_by, @status, @tx_hash, @block_number, @issued_at, @template_key, @artifact_type, @pdf_hash, @signed, @render_status)
     ON CONFLICT(certificate_id) DO UPDATE SET
       recipient_name  = COALESCE(excluded.recipient_name, certificates.recipient_name),
       recipient_email = COALESCE(excluded.recipient_email, certificates.recipient_email),
@@ -16,7 +16,12 @@ module.exports = (db) => {
       status         = COALESCE(excluded.status, certificates.status),
       tx_hash        = COALESCE(excluded.tx_hash, certificates.tx_hash),
       block_number   = COALESCE(excluded.block_number, certificates.block_number),
-      issued_at      = COALESCE(excluded.issued_at, certificates.issued_at)
+      issued_at      = COALESCE(excluded.issued_at, certificates.issued_at),
+      template_key   = COALESCE(excluded.template_key, certificates.template_key),
+      artifact_type  = COALESCE(excluded.artifact_type, certificates.artifact_type),
+      pdf_hash       = COALESCE(excluded.pdf_hash, certificates.pdf_hash),
+      signed         = COALESCE(excluded.signed, certificates.signed),
+      render_status  = COALESCE(excluded.render_status, certificates.render_status)
   `);
 
   return {
@@ -33,6 +38,11 @@ module.exports = (db) => {
         tx_hash: c.txHash ?? null,
         block_number: c.blockNumber ?? null,
         issued_at: c.issuedAt ?? null,
+        template_key: c.templateKey ?? null,
+        artifact_type: c.artifactType ?? null,
+        pdf_hash: c.pdfHash ?? null,
+        signed: c.signed == null ? null : c.signed ? 1 : 0,
+        render_status: c.renderStatus ?? null,
       });
     },
     async setStatus(certificateId, status) {

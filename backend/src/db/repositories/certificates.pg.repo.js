@@ -16,6 +16,11 @@ module.exports = (prisma) => ({
         tx_hash: c.txHash ?? null,
         block_number: c.blockNumber ?? null,
         issued_at: c.issuedAt ?? null,
+        template_key: c.templateKey ?? null,
+        artifact_type: c.artifactType ?? "uploaded",
+        pdf_hash: c.pdfHash ?? null,
+        signed: c.signed ?? false,
+        render_status: c.renderStatus ?? "done",
       },
       update: {
         recipient_name: c.recipientName ?? undefined,
@@ -27,6 +32,11 @@ module.exports = (prisma) => ({
         tx_hash: c.txHash ?? undefined,
         block_number: c.blockNumber ?? undefined,
         issued_at: c.issuedAt ?? undefined,
+        template_key: c.templateKey ?? undefined,
+        artifact_type: c.artifactType ?? undefined,
+        pdf_hash: c.pdfHash ?? undefined,
+        signed: c.signed ?? undefined,
+        render_status: c.renderStatus ?? undefined,
       },
     });
   },

@@ -32,7 +32,12 @@ CREATE TABLE IF NOT EXISTS certificates (
   tx_hash        TEXT,
   block_number   INTEGER,
   issued_at      TEXT,                         -- ISO; substr(.,1,10) -> hari
-  created_at     TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at     TEXT NOT NULL DEFAULT (datetime('now')),
+  template_key   TEXT,                         -- Fase A: key template (null = uploaded)
+  artifact_type  TEXT NOT NULL DEFAULT 'uploaded', -- 'uploaded' | 'generated'
+  pdf_hash       TEXT,                         -- keccak256 byte PDF
+  signed         INTEGER NOT NULL DEFAULT 0,   -- PAdES?
+  render_status  TEXT NOT NULL DEFAULT 'done'  -- queued|rendering|done|failed
 );
 CREATE INDEX IF NOT EXISTS idx_cert_inst      ON certificates(institution_id);
 CREATE INDEX IF NOT EXISTS idx_cert_issued_at ON certificates(issued_at);

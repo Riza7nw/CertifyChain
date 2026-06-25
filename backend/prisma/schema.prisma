@@ -47,6 +47,13 @@ model certificates {
   issued_at       String? // ISO string (parity dengan sqlite; substr utk grouping harian)
   created_at      DateTime @default(now())
 
+  // PDF certificate (Fase A): artefak generate vs upload
+  template_key    String? // key template di registry kode (mis. 'classic'); null = uploaded
+  artifact_type   String   @default("uploaded") // 'uploaded' | 'generated'
+  pdf_hash        String? // keccak256 byte PDF (kemudahan; fileCid tetap jangkar utama)
+  signed          Boolean  @default(false) // PAdES diterapkan? (fase lanjutan)
+  render_status   String   @default("done") // queued | rendering | done | failed
+
   @@index([institution_id])
   @@index([issued_at])
   @@index([recipient_email])

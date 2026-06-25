@@ -32,4 +32,14 @@ function isValidBytes32(value) {
   return typeof value === "string" && ethers.isHexString(value, 32);
 }
 
-module.exports = { generateDataHash, generateCertificateId, isValidBytes32 };
+/**
+ * keccak256 atas BYTE mentah (mis. byte PDF) -> bytes32 hex.
+ * Beda dengan generateDataHash yang meng-hash string/JSON.
+ * @param {Buffer|Uint8Array} bytes
+ * @returns {string} bytes32 (0x...)
+ */
+function keccak256Bytes(bytes) {
+  return ethers.keccak256(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes));
+}
+
+module.exports = { generateDataHash, generateCertificateId, isValidBytes32, keccak256Bytes };

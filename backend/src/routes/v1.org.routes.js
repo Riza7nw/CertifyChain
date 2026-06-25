@@ -32,4 +32,16 @@ router.post(
   c.issueOrgCertificate
 );
 
+// Terbitkan sertifikat PDF generate (OrgAdmin/Issuer) — JSON, tanpa file (Fase A)
+router.post(
+  "/orgs/:orgId/certificates/generate",
+  issueLimiter,
+  authenticateUser,
+  requireOrgRole(CAN_ISSUE),
+  c.generateOrgCertificate
+);
+
+// Daftar template PDF (butuh login)
+router.get("/certificate-templates", authenticateUser, c.listTemplates);
+
 module.exports = router;

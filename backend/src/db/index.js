@@ -45,6 +45,17 @@ if (config.dbDriver === "postgres") {
   db.exec("PRAGMA journal_mode = WAL;");
   db.exec(schema);
 
+  // Migrasi ringan: pastikan kolom PDF (Fase A) ada di DB sqlite lama.
+  const ensureCol = (table, col, ddl) => {
+    const cols = db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name);
+    if (!cols.includes(col)) db.exec(`ALTER TABLE ${table} ADD COLUMN ${ddl}`);
+  };
+  ensureCol("certificates", "template_key", "template_key TEXT");
+  ensureCol("certificates", "artifact_type", "artifact_type TEXT NOT NULL DEFAULT 'uploaded'");
+  ensureCol("certificates", "pdf_hash", "pdf_hash TEXT");
+  ensureCol("certificates", "signed", "signed INTEGER NOT NULL DEFAULT 0");
+  ensureCol("certificates", "render_status", "render_status TEXT NOT NULL DEFAULT 'done'");
+
   repos = {
     driver: "sqlite",
     client: db,

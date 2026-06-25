@@ -183,4 +183,39 @@ const issueOrgCertificate = asyncHandler(async (req, res) => {
   res.status(201).json({ success: true, message: "Sertifikat berhasil diterbitkan.", data: result });
 });
 
-module.exports = { listMyOrgs, getOrgCertificates, getOrgStats, provisionOrg, issueOrgCertificate };
+/**
+ * POST /api/v1/orgs/:orgId/certificates/generate  (OrgAdmin/Issuer, JSON — TANPA file)
+ * Platform MERENDER PDF dari template lalu menerbitkan (Fase A).
+ */
+const generateOrgCertificate = asyncHandler(async (req, res) => {
+  const orgId = Number(req.params.orgId);
+  const org = await loadOrg(orgId);
+
+  const { recipientName, recipientEmail, data, templateKey } = req.body || {};
+  if (!recipientName || typeof recipientName !== "string") {
+    throw new AppError("Field 'recipientName' wajib diisi.", 400, "VALIDATION_ERROR");
+  }
+  if (org.onchain_institution_id == null) {
+    throw new AppError("Organisasi belum diprovision on-chain.", 409, "NOT_PROVISIONED");
+  }
+
+  const result = await certificateService.issueGenerated({
+    institutionId: org.onchain_institution_id,
+    institutionName: org.name,
+    recipientName,
+    recipientEmail,
+    data,
+    templateKey,
+    issuedByLabel: req.authUser.email,
+    ip: req.ip,
+  });
+
+  res.status(201).json({ success: true, message: "Sertifikat PDF berhasil diterbitkan.", data: result });
+});
+
+/** GET /api/v1/certificate-templates — daftar template PDF yang tersedia. */
+const listTemplates = asyncHandler(async (req, res) => {
+  res.json({ success: true, data: certificateService.listTemplates() });
+});
+
+module.exports = { listMyOrgs, getOrgCertificates, getOrgStats, provisionOrg, issueOrgCertificate, generateOrgCertificate, listTemplates };
