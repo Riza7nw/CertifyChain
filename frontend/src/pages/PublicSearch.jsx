@@ -1,16 +1,17 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { Search, ShieldCheck, FileSearch } from "lucide-react";
 import Card from "../components/Card";
 import Button from "../components/Button";
 import Alert from "../components/Alert";
 import Spinner from "../components/Spinner";
+import CertStatus from "../components/CertStatus";
+import EmptyState from "../components/EmptyState";
 import { TextField } from "../components/Field";
 import { searchPublicCertificates } from "../api/certificateApi";
 
-// Phase 7f — Pencarian sertifikat PUBLIK (tanpa login). Cari by certId dan/atau nama
-// institusi. Hasil tidak menampilkan identitas penerima (privasi); keaslian diverifikasi
-// on-chain lewat halaman /verify/:id.
 export default function PublicSearch() {
+  const navigate = useNavigate();
   const [certId, setCertId] = useState("");
   const [institution, setInstitution] = useState("");
   const [page, setPage] = useState(1);
@@ -43,39 +44,17 @@ export default function PublicSearch() {
   }
 
   return (
-    <div className="space-y-5 animate-fade-in">
+    <div className="space-y-5">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-fg">Cari Sertifikat</h1>
-        <p className="mt-1 text-sm text-fg-muted">
-          Cari berdasarkan Certificate ID dan/atau nama institusi penerbit.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight text-fg">Cari sertifikat</h1>
+        <p className="mt-1 text-sm text-fg-muted">Berdasarkan Certificate ID dan/atau nama institusi penerbit.</p>
       </div>
 
       <Card>
-        <form
-          className="space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            run(1);
-          }}
-        >
-          <TextField
-            id="certId"
-            label="Certificate ID"
-            value={certId}
-            onChange={(e) => setCertId(e.target.value)}
-            placeholder="0x… (64 hex)"
-            helper="Opsional bila mencari lewat nama institusi."
-          />
-          <TextField
-            id="institution"
-            label="Nama Institusi"
-            value={institution}
-            onChange={(e) => setInstitution(e.target.value)}
-            placeholder="mis. Universitas…"
-            helper="Minimal 2 karakter. Pencocokan sebagian, tidak peka huruf besar/kecil."
-          />
-          <Button type="submit" loading={loading} className="w-full">Cari</Button>
+        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); run(1); }}>
+          <TextField id="certId" label="Certificate ID" value={certId} onChange={(e) => setCertId(e.target.value)} placeholder="0x… (64 hex)" helper="Opsional bila mencari lewat nama institusi." />
+          <TextField id="institution" label="Nama institusi" value={institution} onChange={(e) => setInstitution(e.target.value)} placeholder="mis. Universitas…" helper="Minimal 2 karakter, pencocokan sebagian." />
+          <Button type="submit" loading={loading} icon={Search} className="w-full">Cari</Button>
         </form>
       </Card>
 
@@ -90,37 +69,29 @@ export default function PublicSearch() {
       {data && (
         <Card title={`Hasil (${data.pagination.total})`}>
           {data.items.length === 0 ? (
-            <p className="text-sm text-fg-muted">Tidak ada sertifikat yang cocok.</p>
+            <EmptyState icon={FileSearch} title="Tidak ada hasil" description="Tidak ada sertifikat yang cocok dengan pencarian." />
           ) : (
             <>
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {data.items.map((c) => (
-                  <div key={c.certificateId} className="rounded-xl border border-line p-4">
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="font-medium text-fg">{c.institutionName || "Institusi —"}</p>
-                        <code className="mt-0.5 block truncate font-mono text-xs text-fg-faint">{c.certificateId}</code>
-                        <p className="mt-1 text-xs text-fg-faint">
-                          {c.issuedAt ? new Date(c.issuedAt).toLocaleDateString("id-ID") : "—"} •{" "}
-                          {c.status === "revoked" ? (
-                            <span className="text-danger-fg">Dicabut</span>
-                          ) : (
-                            <span className="text-success-fg">Aktif</span>
-                          )}
-                        </p>
-                      </div>
-                      <Link to={`/verify/${c.certificateId}`}>
-                        <Button variant="secondary">Verifikasi</Button>
-                      </Link>
+                  <div key={c.certificateId} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line p-4">
+                    <div className="min-w-0">
+                      <p className="font-medium text-fg">{c.institutionName || "Institusi —"}</p>
+                      <code className="mt-0.5 block truncate font-mono text-xs text-fg-faint">{c.certificateId}</code>
+                      <p className="mt-1 text-xs text-fg-faint">{c.issuedAt ? new Date(c.issuedAt).toLocaleDateString("id-ID") : "—"}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <CertStatus status={c.status} />
+                      <Button size="sm" variant="secondary" icon={ShieldCheck} onClick={() => navigate(`/verify/${c.certificateId}`)}>Verifikasi</Button>
                     </div>
                   </div>
                 ))}
               </div>
               {data.pagination.totalPages > 1 && (
                 <div className="mt-4 flex items-center justify-between text-sm">
-                  <Button variant="secondary" disabled={page <= 1} onClick={() => run(page - 1)}>← Sebelumnya</Button>
+                  <Button size="sm" variant="secondary" disabled={page <= 1} onClick={() => run(page - 1)}>← Sebelumnya</Button>
                   <span className="text-fg-muted">Hal {data.pagination.page} / {data.pagination.totalPages}</span>
-                  <Button variant="secondary" disabled={page >= data.pagination.totalPages} onClick={() => run(page + 1)}>Berikutnya →</Button>
+                  <Button size="sm" variant="secondary" disabled={page >= data.pagination.totalPages} onClick={() => run(page + 1)}>Berikutnya →</Button>
                 </div>
               )}
             </>

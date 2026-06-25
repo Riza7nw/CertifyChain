@@ -1,5 +1,6 @@
 import { useState, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
+import { ShieldCheck } from "lucide-react";
 import Card from "../components/Card";
 import Button from "../components/Button";
 import Alert from "../components/Alert";
@@ -36,7 +37,7 @@ export default function ScanVerify() {
   return (
     <div className="space-y-5 animate-fade-in">
       <div className="text-center">
-        <h1 className="text-2xl font-bold text-fg">Verifikasi Sertifikat</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-fg">Verifikasi sertifikat</h1>
         <p className="mt-1 text-sm text-fg-muted">
           Pindai QR Code pada sertifikat, atau masukkan Certificate ID secara manual.
         </p>
@@ -67,8 +68,8 @@ export default function ScanVerify() {
             onChange={(e) => setManualId(e.target.value)}
             className="flex-1"
           />
-          <Button type="submit" className="sm:mb-0.5" disabled={!manualId.trim()}>
-            Verify
+          <Button type="submit" icon={ShieldCheck} disabled={!manualId.trim()}>
+            Verifikasi
           </Button>
         </form>
       </Card>

@@ -6,7 +6,7 @@ const VARIANTS = {
   primary: "bg-brand text-brand-fg hover:bg-brand-hover shadow-xs",
   secondary: "bg-surface text-fg border border-line-strong hover:bg-surface-hover",
   ghost: "bg-transparent text-fg-muted hover:bg-surface-hover hover:text-fg",
-  destructive: "bg-transparent text-danger-fg border border-line-strong hover:bg-danger-subtle hover:border-danger/40",
+  destructive: "bg-transparent text-danger-fg border border-line-strong hover:bg-danger-subtle hover:border-danger",
   link: "bg-transparent text-brand hover:underline px-0",
 };
 
