@@ -80,6 +80,32 @@ module.exports = (db) => {
         )
         .all(limit, offset);
     },
+    // Phase 7e: pencarian PUBLIK by certId (exact) dan/atau institusi (daftar id).
+    // institutionIds = [] -> tak ada institusi cocok -> hasil kosong.
+    async searchPublic({ certId = null, institutionIds = null, limit = 20, offset = 0 } = {}) {
+      if (institutionIds && institutionIds.length === 0) return [];
+      const conds = [], params = [];
+      if (certId) { conds.push("certificate_id = ?"); params.push(certId); }
+      if (institutionIds) {
+        conds.push(`institution_id IN (${institutionIds.map(() => "?").join(",")})`);
+        params.push(...institutionIds);
+      }
+      const where = conds.length ? `WHERE ${conds.join(" AND ")}` : "";
+      return db
+        .prepare(`SELECT * FROM certificates ${where} ORDER BY issued_at DESC, created_at DESC LIMIT ? OFFSET ?`)
+        .all(...params, limit, offset);
+    },
+    async countPublic({ certId = null, institutionIds = null } = {}) {
+      if (institutionIds && institutionIds.length === 0) return 0;
+      const conds = [], params = [];
+      if (certId) { conds.push("certificate_id = ?"); params.push(certId); }
+      if (institutionIds) {
+        conds.push(`institution_id IN (${institutionIds.map(() => "?").join(",")})`);
+        params.push(...institutionIds);
+      }
+      const where = conds.length ? `WHERE ${conds.join(" AND ")}` : "";
+      return db.prepare(`SELECT COUNT(*) AS n FROM certificates ${where}`).get(...params).n;
+    },
     // Statistik: jumlah penerbitan per hari (N hari terakhir).
     async issuedDaily(days = 30) {
       return db

@@ -81,6 +81,26 @@ module.exports = (prisma) => ({
     });
   },
 
+  // Phase 7e: pencarian PUBLIK by certId (exact) dan/atau institusi (daftar id).
+  // Controller yang memilih field aman (tanpa PII penerima).
+  async searchPublic({ certId = null, institutionIds = null, limit = 20, offset = 0 } = {}) {
+    const where = {};
+    if (certId) where.certificate_id = certId;
+    if (institutionIds) where.institution_id = { in: institutionIds };
+    return prisma.certificates.findMany({
+      where,
+      orderBy: [{ issued_at: "desc" }, { created_at: "desc" }],
+      take: limit,
+      skip: offset,
+    });
+  },
+  async countPublic({ certId = null, institutionIds = null } = {}) {
+    const where = {};
+    if (certId) where.certificate_id = certId;
+    if (institutionIds) where.institution_id = { in: institutionIds };
+    return prisma.certificates.count({ where });
+  },
+
   // Statistik harian. left(issued_at,10) = padanan Postgres dari substr(.,1,10) sqlite.
   // ::int agar COUNT (bigint) dikembalikan sebagai number (bukan BigInt).
   async issuedDaily(days = 30) {

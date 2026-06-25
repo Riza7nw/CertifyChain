@@ -26,4 +26,13 @@ const issueLimiter = rateLimit({
   message: jsonMessage("Terlalu banyak permintaan penerbitan. Coba lagi sebentar lagi."),
 });
 
-module.exports = { loginLimiter, issueLimiter };
+// Pencarian publik: cegah enumerasi/abuse (Phase 7e). Longgar tapi berbatas.
+const searchLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 menit
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: jsonMessage("Terlalu banyak permintaan pencarian. Coba lagi sebentar lagi."),
+});
+
+module.exports = { loginLimiter, issueLimiter, searchLimiter };
