@@ -1,17 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Building2, ChevronRight } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
-import Card from "../components/Card";
-import Spinner from "../components/Spinner";
+import PageHeader from "../components/PageHeader";
+import Badge from "../components/Badge";
+import Avatar from "../components/Avatar";
 import Alert from "../components/Alert";
+import EmptyState from "../components/EmptyState";
+import Skeleton from "../components/Skeleton";
 
 function RoleBadge({ role }) {
-  const color =
-    role === "PlatformAdmin" ? "bg-purple-50 text-purple-700"
-      : role === "OrgAdmin" ? "bg-brand-subtle text-brand"
-      : role === "Issuer" ? "bg-success-subtle text-success-fg"
-      : "bg-app text-fg-muted";
-  return <span className={`rounded-md px-2 py-0.5 text-xs font-semibold ${color}`}>{role || "—"}</span>;
+  const tone = role === "PlatformAdmin" ? "brand" : role === "OrgAdmin" ? "info" : role === "Issuer" ? "success" : "neutral";
+  return <Badge tone={tone}>{role || "—"}</Badge>;
 }
 
 export default function OrgsPage() {
@@ -36,43 +36,46 @@ export default function OrgsPage() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold text-fg">Organisasi</h1>
-        <p className="mt-1 text-sm text-fg-muted">
-          {isPlatformAdmin ? "Semua organisasi (platform admin)." : "Organisasi tempat Anda menjadi anggota."}
-        </p>
-      </div>
+    <div className="space-y-5">
+      <PageHeader
+        title="Organisasi"
+        description={isPlatformAdmin ? "Semua organisasi (platform admin)." : "Organisasi tempat Anda menjadi anggota."}
+      />
 
       {error && <Alert type="error">{error}</Alert>}
+
       {!orgs && !error && (
-        <div className="flex items-center gap-3 py-10 text-fg-muted">
-          <Spinner className="h-5 w-5" /> <span className="text-sm">Memuat organisasi…</span>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-xl" />)}
         </div>
       )}
 
       {orgs && orgs.length === 0 && (
-        <Card><p className="text-sm text-fg-muted">Belum ada organisasi.</p></Card>
+        <EmptyState icon={Building2} title="Belum ada organisasi" description="Anda belum menjadi anggota organisasi mana pun." />
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-3 sm:grid-cols-2">
         {orgs?.map((o) => (
-          <button key={o.id} onClick={() => open(o)} className="text-left">
-            <Card className="h-full transition hover:-translate-y-0.5 hover:shadow-md">
-              <div className="flex items-start justify-between gap-2">
-                <h2 className="text-base font-semibold text-fg">{o.name}</h2>
+          <button
+            key={o.id}
+            onClick={() => open(o)}
+            className="group flex flex-col rounded-xl border border-line bg-surface p-4 text-left shadow-xs transition-colors hover:border-line-strong hover:bg-surface-hover"
+          >
+            <div className="flex items-center gap-3">
+              <Avatar name={o.name} square brand />
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium text-fg">{o.name}</p>
+                <p className="truncate text-xs text-fg-faint">/{o.slug}</p>
+              </div>
+              <ChevronRight className="h-4 w-4 flex-shrink-0 text-fg-faint transition-transform group-hover:translate-x-0.5" />
+            </div>
+            <div className="mt-4 flex items-center justify-between">
+              <span className="text-sm text-fg-muted">{o.certificateCount} sertifikat</span>
+              <div className="flex items-center gap-2">
+                {o.provisioned ? <Badge tone="success" dot>on-chain</Badge> : <Badge tone="warning" dot>belum</Badge>}
                 <RoleBadge role={o.role} />
               </div>
-              <p className="mt-1 text-xs text-fg-faint">/{o.slug}</p>
-              <div className="mt-4 flex items-center justify-between text-sm">
-                <span className="text-fg-muted">{o.certificateCount} sertifikat</span>
-                {o.provisioned ? (
-                  <span className="text-success-fg">● on-chain</span>
-                ) : (
-                  <span className="text-warning-fg">● belum diprovision</span>
-                )}
-              </div>
-            </Card>
+            </div>
           </button>
         ))}
       </div>

@@ -1,24 +1,24 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
+import CommandPalette from "../CommandPalette";
 
 // Kerangka aplikasi (Phase 8): sidebar (desktop) / drawer (mobile) + topbar + konten.
 export default function AppShell({ children }) {
   const [drawer, setDrawer] = useState(false);
-  const navigate = useNavigate();
+  const [palette, setPalette] = useState(false);
 
-  // ⌘K / Ctrl+K → pencarian (command palette penuh menyusul di fase berikutnya).
+  // ⌘K / Ctrl+K → command palette.
   useEffect(() => {
     const onKey = (e) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
-        navigate("/search");
+        setPalette((p) => !p);
       }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [navigate]);
+  }, []);
 
   return (
     <div className="flex min-h-screen bg-app text-fg">
@@ -38,11 +38,13 @@ export default function AppShell({ children }) {
       )}
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <Topbar onMenu={() => setDrawer(true)} />
+        <Topbar onMenu={() => setDrawer(true)} onSearch={() => setPalette(true)} />
         <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           <div className="mx-auto max-w-5xl animate-fade-in">{children}</div>
         </main>
       </div>
+
+      <CommandPalette open={palette} onClose={() => setPalette(false)} />
     </div>
   );
 }

@@ -1,15 +1,24 @@
 import { useEffect, useState, useCallback } from "react";
+import { Trash2, Search, ShieldOff } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
+import { useToast } from "../components/Toast";
+import { useConfirm } from "../components/Confirm";
 import Card from "../components/Card";
 import Button from "../components/Button";
 import Alert from "../components/Alert";
-import Spinner from "../components/Spinner";
+import Badge from "../components/Badge";
+import PageHeader from "../components/PageHeader";
+import DataTable from "../components/DataTable";
+import Pagination from "../components/Pagination";
+import EmptyState from "../components/EmptyState";
+import { SkeletonRows } from "../components/Skeleton";
 import { TextField, SelectField } from "../components/Field";
 
-// Phase 7f — "Kelola User" (khusus platform admin): daftar user + ubah role/status + hapus.
 export default function AdminUsers() {
   const { apiFetch, isPlatformAdmin, user } = useAuth();
-  const [data, setData] = useState(null); // { pagination, items }
+  const toast = useToast();
+  const confirm = useConfirm();
+  const [data, setData] = useState(null);
   const [page, setPage] = useState(1);
   const [q, setQ] = useState("");
   const [role, setRole] = useState("");
@@ -38,172 +47,136 @@ export default function AdminUsers() {
     if (isPlatformAdmin) load();
   }, [isPlatformAdmin, load]);
 
-  async function patch(id, body) {
+  async function patch(id, body, okMsg) {
     setBusyId(id);
-    setError(null);
     try {
       await apiFetch(`/v1/admin/users/${id}`, { method: "PATCH", body: JSON.stringify(body) });
+      if (okMsg) toast.success(okMsg);
       await load();
     } catch (e) {
-      setError(e.message);
+      toast.error("Gagal memperbarui", e.message);
     } finally {
       setBusyId(null);
     }
   }
 
   async function remove(u) {
-    if (!window.confirm(`Hapus user ${u.email}? Tindakan ini permanen.`)) return;
+    const ok = await confirm({
+      title: "Hapus pengguna?",
+      description: `Akun ${u.email} akan dihapus permanen beserta keanggotaannya.`,
+      confirmText: "Hapus",
+    });
+    if (!ok) return;
     setBusyId(u.id);
-    setError(null);
     try {
       await apiFetch(`/v1/admin/users/${u.id}`, { method: "DELETE" });
+      toast.success("Pengguna dihapus");
       await load();
     } catch (e) {
-      setError(e.message);
+      toast.error("Gagal menghapus", e.message);
     } finally {
       setBusyId(null);
     }
   }
 
   if (!isPlatformAdmin) {
-    return (
-      <div className="animate-fade-in">
-        <Alert type="error" title="Akses ditolak">Halaman ini khusus platform admin.</Alert>
-      </div>
-    );
+    return <Alert type="error" title="Akses ditolak">Halaman ini khusus platform admin.</Alert>;
   }
 
+  const selectCls = "rounded-lg border border-line-strong bg-surface px-2.5 py-1.5 text-sm text-fg disabled:bg-surface-hover disabled:text-fg-faint";
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold text-fg">Kelola User</h1>
-        <p className="mt-1 text-sm text-fg-muted">Atur peran, status aktif, dan hapus akun pengguna.</p>
-      </div>
+    <div className="space-y-5">
+      <PageHeader title="Kelola pengguna" description="Atur peran, status aktif, dan hapus akun." />
 
       {error && <Alert type="error">{error}</Alert>}
 
-      {/* Filter */}
-      <Card>
+      <Card bodyClassName="px-4 py-3.5">
         <form
           className="grid gap-3 sm:grid-cols-[1fr_auto_auto_auto]"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setPage(1);
-            load();
-          }}
+          onSubmit={(e) => { e.preventDefault(); setPage(1); load(); }}
         >
           <TextField id="q" label="Cari email" value={q} onChange={(e) => setQ(e.target.value)} placeholder="nama@contoh.com" />
           <SelectField id="role" label="Role" value={role} onChange={(e) => { setRole(e.target.value); setPage(1); }}>
-            <option value="">Semua</option>
+            <option value="">Semua role</option>
             <option value="admin">admin</option>
             <option value="user">user</option>
           </SelectField>
           <SelectField id="active" label="Status" value={active} onChange={(e) => { setActive(e.target.value); setPage(1); }}>
-            <option value="">Semua</option>
+            <option value="">Semua status</option>
             <option value="true">Aktif</option>
             <option value="false">Nonaktif</option>
           </SelectField>
           <div className="flex items-end">
-            <Button type="submit" className="w-full">Cari</Button>
+            <Button type="submit" icon={Search} className="w-full">Cari</Button>
           </div>
         </form>
       </Card>
 
-      <Card>
+      <Card bodyClassName="px-4 py-3">
         {loading && !data ? (
-          <div className="flex items-center gap-3 py-6 text-fg-muted">
-            <Spinner className="h-5 w-5" /><span className="text-sm">Memuat…</span>
-          </div>
-        ) : data?.items?.length ? (
+          <SkeletonRows rows={5} />
+        ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-line text-left text-xs uppercase tracking-wide text-fg-faint">
-                    <th className="py-2 pr-3">User</th>
-                    <th className="py-2 pr-3">Role</th>
-                    <th className="py-2 pr-3">Status</th>
-                    <th className="py-2">Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.items.map((u) => {
-                    const self = u.id === user?.id;
-                    const busy = busyId === u.id;
-                    return (
-                      <tr key={u.id} className="border-b border-line align-top">
-                        <td className="py-3 pr-3">
-                          <p className="font-medium text-fg">
-                            {u.email} {self && <span className="text-xs text-fg-faint">(Anda)</span>}
-                          </p>
-                          <p className="text-xs text-fg-faint">
-                            {u.name || "—"} •{" "}
-                            {u.emailVerified ? (
-                              <span className="text-success-fg">email terverifikasi</span>
-                            ) : (
-                              <span className="text-warning-fg">belum verifikasi</span>
-                            )}
-                          </p>
-                          {u.memberships?.length > 0 && (
-                            <p className="mt-0.5 text-xs text-fg-faint">
-                              {u.memberships.map((m) => `${m.orgName} (${m.role})`).join(", ")}
-                            </p>
-                          )}
-                        </td>
-                        <td className="py-3 pr-3">
-                          <select
-                            value={u.role}
-                            disabled={self || busy}
-                            onChange={(e) => patch(u.id, { role: e.target.value })}
-                            className="rounded-lg border border-line-strong bg-surface px-2 py-1 text-sm text-fg disabled:bg-surface-hover disabled:text-fg-faint"
-                          >
-                            <option value="user">user</option>
-                            <option value="admin">admin</option>
-                          </select>
-                        </td>
-                        <td className="py-3 pr-3">
-                          {u.active ? (
-                            <span className="text-success-fg">Aktif</span>
-                          ) : (
-                            <span className="text-fg-faint">Nonaktif</span>
-                          )}
-                        </td>
-                        <td className="py-3">
-                          <div className="flex flex-wrap gap-2">
-                            <Button
-                              variant="secondary"
-                              disabled={self || busy}
-                              loading={busy}
-                              onClick={() => patch(u.id, { active: !u.active })}
-                            >
-                              {u.active ? "Nonaktifkan" : "Aktifkan"}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              className="text-danger-fg hover:bg-danger-subtle"
-                              disabled={self || busy}
-                              onClick={() => remove(u)}
-                            >
-                              Hapus
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            {data.pagination.totalPages > 1 && (
-              <div className="mt-4 flex items-center justify-between text-sm">
-                <Button variant="secondary" disabled={page <= 1} onClick={() => setPage((p) => p - 1)}>← Sebelumnya</Button>
-                <span className="text-fg-muted">Hal {data.pagination.page} / {data.pagination.totalPages}</span>
-                <Button variant="secondary" disabled={page >= data.pagination.totalPages} onClick={() => setPage((p) => p + 1)}>Berikutnya →</Button>
-              </div>
+            <DataTable
+              rows={data?.items || []}
+              rowKey={(u) => u.id}
+              empty={<EmptyState icon={Search} title="Tidak ada pengguna" description="Tidak ada akun yang cocok dengan filter." />}
+              columns={[
+                {
+                  header: "Pengguna",
+                  primary: true,
+                  cell: (u) => (
+                    <div>
+                      <p className="font-medium text-fg">
+                        {u.email} {u.id === user?.id && <span className="text-xs font-normal text-fg-faint">(Anda)</span>}
+                      </p>
+                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-fg-faint">
+                        <span>{u.name || "—"}</span>
+                        {u.emailVerified ? <Badge tone="success">terverifikasi</Badge> : <Badge tone="warning">belum verifikasi</Badge>}
+                      </div>
+                      {u.memberships?.length > 0 && (
+                        <p className="mt-1 text-xs text-fg-faint">{u.memberships.map((m) => `${m.orgName} (${m.role})`).join(", ")}</p>
+                      )}
+                    </div>
+                  ),
+                },
+                {
+                  header: "Role",
+                  cell: (u) => (
+                    <select
+                      value={u.role}
+                      disabled={u.id === user?.id || busyId === u.id}
+                      onChange={(e) => patch(u.id, { role: e.target.value }, "Role diperbarui")}
+                      className={selectCls}
+                    >
+                      <option value="user">user</option>
+                      <option value="admin">admin</option>
+                    </select>
+                  ),
+                },
+                { header: "Status", cell: (u) => (u.active ? <Badge tone="success" dot>Aktif</Badge> : <Badge tone="neutral" dot>Nonaktif</Badge>) },
+                {
+                  header: "",
+                  align: "right",
+                  hideLabel: true,
+                  cell: (u) => (
+                    <div className="flex flex-wrap justify-end gap-2">
+                      <Button size="sm" variant="secondary" icon={ShieldOff} disabled={u.id === user?.id || busyId === u.id} onClick={() => patch(u.id, { active: !u.active }, u.active ? "Pengguna dinonaktifkan" : "Pengguna diaktifkan")}>
+                        {u.active ? "Nonaktifkan" : "Aktifkan"}
+                      </Button>
+                      <Button size="sm" variant="destructive" icon={Trash2} disabled={u.id === user?.id || busyId === u.id} onClick={() => remove(u)}>
+                        Hapus
+                      </Button>
+                    </div>
+                  ),
+                },
+              ]}
+            />
+            {data?.pagination && (
+              <Pagination className="mt-4" page={data.pagination.page} totalPages={data.pagination.totalPages} total={data.pagination.total} onChange={setPage} />
             )}
           </>
-        ) : (
-          <p className="text-sm text-fg-muted">Tidak ada user yang cocok.</p>
         )}
       </Card>
     </div>
