@@ -13,7 +13,9 @@ async function applyMetadata(buffer, { recipientName, institutionName, certifica
   doc.setKeywords([`certId:${certificateId}`, "certifychain"]);
   doc.setCreator("CertifyChain");
   doc.setProducer("CertifyChain PDF Certificate");
-  const out = await doc.save();
+  // xref tabel klasik (bukan object stream) agar kompatibel dgn placeholder tanda
+  // tangan PAdES (@signpdf/placeholder-plain memerlukan xref table tradisional).
+  const out = await doc.save({ useObjectStreams: false });
   return Buffer.from(out);
 }
 

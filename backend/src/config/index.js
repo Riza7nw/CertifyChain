@@ -71,6 +71,15 @@ const config = {
         : "https://ipfs.io/ipfs"),
   },
 
+  // --- PDF digital signature (Fase C2, PAdES) ---
+  pdfSign: {
+    enabled: String(process.env.PDF_SIGN_ENABLED || "false").toLowerCase() === "true",
+    p12Path: process.env.PDF_SIGN_P12_PATH
+      ? path.resolve(process.env.PDF_SIGN_P12_PATH)
+      : path.join(__dirname, "..", "..", "secrets", "pdf-signing.p12"),
+    passphrase: process.env.PDF_SIGN_PASSPHRASE || "certifychain-dev",
+  },
+
   // Interval polling indexer (ms) untuk jaringan tanpa websocket.
   indexerPollMs: parseInt(process.env.INDEXER_POLL_MS || "5000", 10),
   // Maksimum rentang blok per request eth_getLogs.

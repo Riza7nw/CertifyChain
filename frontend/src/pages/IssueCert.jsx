@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Plus, RotateCcw, ExternalLink, Download, Sparkles, Upload } from "lucide-react";
+import { Plus, RotateCcw, ExternalLink, Download, Sparkles, Upload, FileSignature } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { useToast } from "../components/Toast";
 import Card from "../components/Card";
 import Button from "../components/Button";
 import Alert from "../components/Alert";
+import Badge from "../components/Badge";
 import PageHeader from "../components/PageHeader";
 import CopyField from "../components/CopyField";
 import { TextField, TextAreaField, FileField, SelectField } from "../components/Field";
@@ -91,6 +92,7 @@ export default function IssueCert() {
       {result ? (
         <Card>
           <Alert type="success" title="Sertifikat berhasil diterbitkan">Bagikan QR atau link verifikasi di bawah.</Alert>
+          {result.signed && <div className="mt-3"><Badge tone="brand" icon={FileSignature}>Ditandatangani digital (PAdES)</Badge></div>}
           <div className="mt-4 grid gap-5 sm:grid-cols-[170px_1fr] sm:items-start">
             {result.qrCode && (
               <div className="flex flex-col items-center gap-2">

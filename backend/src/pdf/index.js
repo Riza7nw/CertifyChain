@@ -4,6 +4,7 @@
 
 const { getTemplate, listTemplates, DEFAULT_TEMPLATE } = require("./templates/registry");
 const { applyMetadata } = require("./postprocess");
+const sign = require("./sign");
 const qrService = require("../services/qr.service");
 
 let _rp; // cache modul react-pdf (ESM)
@@ -32,9 +33,18 @@ async function generateCertificatePdf({ templateKey = DEFAULT_TEMPLATE, accent, 
   });
 
   const rendered = await RP.renderToBuffer(element);
-  const buffer = await applyMetadata(rendered, { recipientName, institutionName, certificateId, verificationUrl });
+  let buffer = await applyMetadata(rendered, { recipientName, institutionName, certificateId, verificationUrl });
 
-  return { buffer, templateKey, verificationUrl, qrDataUrl };
+  // Tanda tangan digital PAdES (opsional, Fase C2). Bila aktif, byte hasil tanda
+  // tangan inilah yang di-pin & di-hash (jangkar anti-tamper tetap konsisten).
+  let signed = false;
+  const signedBuf = await sign.signPdf(buffer);
+  if (signedBuf) {
+    buffer = signedBuf;
+    signed = true;
+  }
+
+  return { buffer, signed, templateKey, verificationUrl, qrDataUrl };
 }
 
 module.exports = { generateCertificatePdf, listTemplates };

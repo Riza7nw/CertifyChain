@@ -55,6 +55,7 @@ async function verifyPdf(buffer) {
     match: byteMatch,
     tampered: !byteMatch,
     onChainValid,
+    signed: !!cert.signed,
     certificateId: cert.certificate_id,
     recipientName: cert.recipient_name || null,
     institutionName: institution?.name || null,

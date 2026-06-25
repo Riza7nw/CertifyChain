@@ -4,4 +4,6 @@ node_modules/
 logs/
 /data/
 /storage/
+secrets/
+*.p12
 .DS_Store

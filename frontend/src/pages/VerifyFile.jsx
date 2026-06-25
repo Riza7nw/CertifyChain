@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
-import { UploadCloud, BadgeCheck, ShieldX, FileQuestion, FileText } from "lucide-react";
+import { UploadCloud, BadgeCheck, ShieldX, FileQuestion, FileText, FileSignature } from "lucide-react";
 import Card from "../components/Card";
 import Button from "../components/Button";
 import Alert from "../components/Alert";
@@ -31,6 +31,7 @@ function Verdict({ r }) {
             <Row label="Nama penerima">{r.recipientName || "—"}</Row>
             <Row label="Institusi penerbit">{r.institutionName || "—"}</Row>
             <Row label="Status on-chain">{r.onChainValid ? <Badge tone="success" dot>Aktif</Badge> : <Badge tone="warning" dot>Tidak aktif</Badge>}</Row>
+            {r.signed && <Row label="Tanda tangan digital"><Badge tone="brand" icon={FileSignature}>PAdES</Badge></Row>}
             <Row label="Certificate ID"><code className="font-mono text-xs">{r.certificateId}</code></Row>
           </div>
           <div className="mt-4">

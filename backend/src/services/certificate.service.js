@@ -37,6 +37,7 @@ async function issueToInstitution({
   artifactType = "uploaded",
   templateKey = null,
   pdfHash = null,
+  signed = false,
   issuedAtIso,
 }) {
   // 1. Simpan file -> storage (CID = hash konten = jangkar anti-tamper)
@@ -73,7 +74,7 @@ async function issueToInstitution({
     artifactType,
     templateKey,
     pdfHash,
-    signed: false,
+    signed,
     renderStatus: "done",
   });
 
@@ -92,6 +93,7 @@ async function issueToInstitution({
     pdfHash,
     artifactType,
     templateKey,
+    signed,
     verificationUrl,
     qrCode,
     transaction: receipt,
@@ -108,7 +110,7 @@ async function issueGenerated({ institutionId, institutionName, recipientName, r
   const issuedAtIso = new Date().toISOString();
   const issuedAtLabel = new Date(issuedAtIso).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
 
-  const { buffer, templateKey: usedTemplate } = await pdf.generateCertificatePdf({
+  const { buffer, signed, templateKey: usedTemplate } = await pdf.generateCertificatePdf({
     templateKey: tpl.key,
     accent: tpl.accent,
     certificateId,
@@ -134,6 +136,7 @@ async function issueGenerated({ institutionId, institutionName, recipientName, r
     artifactType: "generated",
     templateKey: usedTemplate,
     pdfHash,
+    signed,
     issuedAtIso,
   });
 }
