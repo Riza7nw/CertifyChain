@@ -52,6 +52,22 @@ module.exports = (prisma) => ({
     return prisma.certificates.count({ where: { institution_id: institutionId } });
   },
 
+  // Phase 7c: sertifikat milik seorang penerima (match email case-insensitive).
+  async listByRecipientEmail(email, { limit = 50, offset = 0 } = {}) {
+    return prisma.certificates.findMany({
+      where: { recipient_email: { equals: email, mode: "insensitive" } },
+      orderBy: [{ issued_at: "desc" }, { created_at: "desc" }],
+      take: limit,
+      skip: offset,
+    });
+  },
+
+  async countByRecipientEmail(email) {
+    return prisma.certificates.count({
+      where: { recipient_email: { equals: email, mode: "insensitive" } },
+    });
+  },
+
   async countAll() {
     return prisma.certificates.count();
   },

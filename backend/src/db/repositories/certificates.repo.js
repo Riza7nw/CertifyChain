@@ -55,6 +55,20 @@ module.exports = (db) => {
         .prepare(`SELECT COUNT(*) AS n FROM certificates WHERE institution_id = ?`)
         .get(institutionId).n;
     },
+    // Phase 7c: sertifikat milik seorang penerima (match email case-insensitive).
+    async listByRecipientEmail(email, { limit = 50, offset = 0 } = {}) {
+      return db
+        .prepare(
+          `SELECT * FROM certificates WHERE lower(recipient_email) = lower(?)
+           ORDER BY issued_at DESC, created_at DESC LIMIT ? OFFSET ?`
+        )
+        .all(email, limit, offset);
+    },
+    async countByRecipientEmail(email) {
+      return db
+        .prepare(`SELECT COUNT(*) AS n FROM certificates WHERE lower(recipient_email) = lower(?)`)
+        .get(email).n;
+    },
     async countAll() {
       return db.prepare(`SELECT COUNT(*) AS n FROM certificates`).get().n;
     },
