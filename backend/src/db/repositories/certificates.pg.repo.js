@@ -72,6 +72,15 @@ module.exports = (prisma) => ({
     return prisma.certificates.count();
   },
 
+  // Phase 7d: SEMUA sertifikat lintas institusi (paginasi) untuk panel admin.
+  async listAll({ limit = 20, offset = 0 } = {}) {
+    return prisma.certificates.findMany({
+      orderBy: [{ issued_at: "desc" }, { created_at: "desc" }],
+      take: limit,
+      skip: offset,
+    });
+  },
+
   // Statistik harian. left(issued_at,10) = padanan Postgres dari substr(.,1,10) sqlite.
   // ::int agar COUNT (bigint) dikembalikan sebagai number (bukan BigInt).
   async issuedDaily(days = 30) {

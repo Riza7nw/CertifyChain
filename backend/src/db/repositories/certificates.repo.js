@@ -72,6 +72,14 @@ module.exports = (db) => {
     async countAll() {
       return db.prepare(`SELECT COUNT(*) AS n FROM certificates`).get().n;
     },
+    // Phase 7d: SEMUA sertifikat lintas institusi (paginasi) untuk panel admin.
+    async listAll({ limit = 20, offset = 0 } = {}) {
+      return db
+        .prepare(
+          `SELECT * FROM certificates ORDER BY issued_at DESC, created_at DESC LIMIT ? OFFSET ?`
+        )
+        .all(limit, offset);
+    },
     // Statistik: jumlah penerbitan per hari (N hari terakhir).
     async issuedDaily(days = 30) {
       return db
