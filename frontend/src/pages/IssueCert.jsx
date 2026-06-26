@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { Plus, RotateCcw, ExternalLink, Download, Sparkles, Upload, FileSignature } from "lucide-react";
+import { Plus, RotateCcw, ExternalLink, Download, Sparkles, Upload, FileSignature, Loader2 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { useToast } from "../components/Toast";
 import Card from "../components/Card";
@@ -30,12 +30,45 @@ export default function IssueCert() {
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
   const [dlBusy, setDlBusy] = useState(false);
+  // Fase C-scale: bila backend memakai antrian async, generate balas 202 + jobId.
+  // Frontend lalu polling status job sampai 'done' (tampilkan hasil) / 'failed'.
+  const [jobId, setJobId] = useState(null);
+  const [jobInfo, setJobInfo] = useState(null);
 
   useEffect(() => {
     apiFetch(`/v1/orgs/${id}/templates`)
       .then((t) => { if (t?.length) { setTemplates(t); setTemplateKey(t[0].id); } })
       .catch(() => {});
   }, [apiFetch, id]);
+
+  // Polling status job render (mode async). Berhenti saat done/failed atau unmount.
+  useEffect(() => {
+    if (!jobId) return;
+    let active = true;
+    let timer;
+    async function poll() {
+      try {
+        const info = await apiFetch(`/v1/render-jobs/${jobId}`);
+        if (!active) return;
+        setJobInfo(info);
+        if (info.status === "done") {
+          setResult(info.result);
+          setJobId(null);
+          toast.success("Sertifikat selesai diproses", "Tercatat di blockchain.");
+          return;
+        }
+        if (info.status === "failed") {
+          toast.error("Render gagal", info.lastError || "Job tidak dapat diselesaikan.");
+          return; // berhenti; UI menampilkan kartu gagal
+        }
+        timer = setTimeout(poll, 2000);
+      } catch (err) {
+        if (active) toast.error("Gagal memeriksa status", err.message);
+      }
+    }
+    poll();
+    return () => { active = false; clearTimeout(timer); };
+  }, [jobId, apiFetch, toast]);
 
   const selectedAccent = templates.find((t) => t.id === templateKey)?.accent;
 
@@ -60,9 +93,16 @@ export default function IssueCert() {
         fd.append("file", file);
         res = await apiFetch(`/v1/orgs/${id}/certificates`, { method: "POST", body: fd });
       }
-      setResult(res);
       setRecipientName(""); setRecipientEmail(""); setData(""); setFile(null);
-      toast.success("Sertifikat diterbitkan", "Tercatat di blockchain.");
+      if (res?.async) {
+        // Mode antrian (Fase C-scale): mulai polling status job.
+        setJobInfo({ status: res.status || "queued", certificateId: res.certificateId });
+        setJobId(res.jobId);
+        toast.success("Sertifikat sedang diproses", "Dirender & dicatat di latar.");
+      } else {
+        setResult(res);
+        toast.success("Sertifikat diterbitkan", "Tercatat di blockchain.");
+      }
     } catch (err) {
       toast.error("Penerbitan gagal", err.message);
     } finally {
@@ -141,6 +181,36 @@ export default function IssueCert() {
           <div className="mt-5 flex flex-wrap gap-2">
             <Button icon={ExternalLink} onClick={() => navigate(`/verify/${result.certificateId}`)}>Buka halaman verifikasi</Button>
             <Button variant="secondary" icon={RotateCcw} onClick={() => setResult(null)}>Terbitkan lagi</Button>
+          </div>
+        </Card>
+      ) : jobInfo?.status === "failed" ? (
+        <Card>
+          <Alert type="error" title="Render sertifikat gagal">
+            {jobInfo.lastError || "Job tidak dapat diselesaikan."}
+            {jobInfo.attempts ? ` (setelah ${jobInfo.attempts} percobaan)` : ""}
+          </Alert>
+          <div className="mt-4">
+            <Button variant="secondary" icon={RotateCcw} onClick={() => { setJobId(null); setJobInfo(null); }}>Kembali ke form</Button>
+          </div>
+        </Card>
+      ) : jobId ? (
+        <Card>
+          <div className="flex flex-col items-center gap-3 py-8 text-center">
+            <Loader2 className="h-10 w-10 animate-spin text-brand" strokeWidth={2} />
+            <div>
+              <p className="text-base font-semibold text-fg">Sedang memproses sertifikat</p>
+              <p className="mt-1 text-sm text-fg-muted">
+                {jobInfo?.status === "processing" ? "Merender PDF & mencatat ke blockchain…" : "Menunggu giliran di antrian…"}
+              </p>
+            </div>
+            <Badge tone={jobInfo?.status === "processing" ? "brand" : "neutral"} dot>
+              {jobInfo?.status === "processing" ? "Dirender" : "Dalam antrian"}
+              {jobInfo?.attempts > 1 ? ` · percobaan ${jobInfo.attempts}` : ""}
+            </Badge>
+            {jobInfo?.certificateId && (
+              <p className="break-all font-mono text-xs text-fg-faint">{jobInfo.certificateId}</p>
+            )}
+            <p className="max-w-sm text-xs text-fg-faint">Halaman memperbarui otomatis. Anda boleh meninggalkan halaman ini — proses tetap berjalan di latar.</p>
           </div>
         </Card>
       ) : (

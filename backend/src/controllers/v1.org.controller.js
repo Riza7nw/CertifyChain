@@ -5,9 +5,11 @@
 const prisma = require("../db/prismaClient");
 const db = require("../db");
 const storage = require("../storage");
+const config = require("../config");
 const blockchainService = require("../services/blockchain.service");
 const certificateService = require("../services/certificate.service");
 const templateService = require("../services/template.service");
+const renderQueue = require("../services/renderQueue.service");
 const asyncHandler = require("../utils/asyncHandler");
 const AppError = require("../utils/AppError");
 
@@ -200,18 +202,30 @@ const generateOrgCertificate = asyncHandler(async (req, res) => {
     throw new AppError("Organisasi belum diprovision on-chain.", 409, "NOT_PROVISIONED");
   }
 
-  const result = await certificateService.issueGenerated({
+  const common = {
     institutionId: org.onchain_institution_id,
     institutionName: org.name,
     recipientName,
     recipientEmail,
     data,
     template: template || templateKey, // ref: 'classic'|'modern'|'<id>'
-    orgId,
     issuedByLabel: req.authUser.email,
     ip: req.ip,
-  });
+  };
 
+  // Mode ASYNC (Fase C-scale): enqueue job, balas 202 cepat; worker memproses di latar.
+  // Hanya bila diaktifkan & memakai Postgres (antrian Postgres-only).
+  if (config.pdfAsync.enabled && config.dbDriver === "postgres") {
+    const job = await renderQueue.enqueueGenerate({ ...common, organizationId: orgId });
+    return res.status(202).json({
+      success: true,
+      message: "Sertifikat PDF sedang diproses.",
+      data: { async: true, jobId: job.jobId, certificateId: job.certificateId, status: job.status },
+    });
+  }
+
+  // Mode SINKRON (default): render + issue langsung.
+  const result = await certificateService.issueGenerated({ ...common, orgId });
   res.status(201).json({ success: true, message: "Sertifikat PDF berhasil diterbitkan.", data: result });
 });
 

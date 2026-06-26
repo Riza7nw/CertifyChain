@@ -77,6 +77,33 @@ model certificate_templates {
   @@map("certificate_templates")
 }
 
+// PDF certificate (Fase C-scale): antrian render async (Postgres-backed queue).
+// Postgres-only. Worker (npm run worker) mengklaim job dgn FOR UPDATE SKIP LOCKED,
+// merender PDF + issue on-chain di latar, lalu update read-model. Diakses via raw
+// SQL (claim butuh SKIP LOCKED) sehingga tidak bergantung pada client ter-generate.
+model render_jobs {
+  id              Int      @id @default(autoincrement())
+  certificate_id  String   @unique // certId dibuat saat enqueue (QR butuh certId)
+  organization_id Int?
+  institution_id  Int
+  status          String   @default("queued") // queued | processing | done | failed
+  payload         Json // input render (recipientName, template, issuedAtIso, dll.)
+  result          Json? // ringkasan hasil saat done (certId, verifyUrl, txHash, ...)
+  attempts        Int      @default(0)
+  max_attempts    Int      @default(3)
+  last_error      String?
+  run_after       DateTime @default(now()) // backoff retry
+  locked_at       DateTime?
+  locked_by       String?
+  tx_hash         String?
+  file_cid        String?
+  created_at      DateTime @default(now())
+  updated_at      DateTime @default(now())
+
+  @@index([status, run_after])
+  @@map("render_jobs")
+}
+
 model verifications {
   id             Int      @id @default(autoincrement())
   certificate_id String?

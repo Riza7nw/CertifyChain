@@ -71,6 +71,23 @@ const config = {
         : "https://ipfs.io/ipfs"),
   },
 
+  // --- PDF render async / antrian (Fase C-scale, Postgres-backed queue) ---
+  // Opt-in: bila enabled & DB_DRIVER=postgres, endpoint generate meng-enqueue job
+  // (balas 202) dan worker (npm run worker) memproses di latar. Default OFF =
+  // jalur sinkron lama (tak butuh worker; tak memutus test/E2E yang ada).
+  pdfAsync: {
+    enabled: String(process.env.PDF_ASYNC_ENABLED || "false").toLowerCase() === "true",
+  },
+  renderWorker: {
+    pollMs: parseInt(process.env.RENDER_WORKER_POLL_MS || "2000", 10),
+    // Job 'processing' yang macet lebih lama dari ini di-requeue (worker mati di tengah).
+    stuckMs: parseInt(process.env.RENDER_WORKER_STUCK_MS || "120000", 10),
+  },
+  renderJob: {
+    maxAttempts: parseInt(process.env.RENDER_JOB_MAX_ATTEMPTS || "3", 10),
+    backoffMs: parseInt(process.env.RENDER_JOB_BACKOFF_MS || "15000", 10),
+  },
+
   // --- PDF digital signature (Fase C2, PAdES) ---
   pdfSign: {
     enabled: String(process.env.PDF_SIGN_ENABLED || "false").toLowerCase() === "true",

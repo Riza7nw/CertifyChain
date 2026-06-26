@@ -106,19 +106,19 @@ async function issueToInstitution({
 }
 
 /**
- * Mode GENERATE: render PDF dari template lalu lewatkan ke pipeline bersama.
- * QR ditanam di PDF -> certId harus dibuat dulu.
+ * Render PDF dari template lalu lewatkan ke pipeline bersama. certId & issuedAtIso
+ * diberikan dari LUAR agar render DETERMINISTIK (byte identik bila diulang) — penting
+ * untuk antrian async/worker yang mungkin retry (Fase C-scale): certId ditetapkan saat
+ * enqueue, issuedAtIso disimpan di payload. QR ditanam di PDF -> certId harus ada dulu.
  */
-async function issueGenerated({ institutionId, institutionName, recipientName, recipientEmail, data, template, orgId, issuedByLabel, ip }) {
+async function renderAndIssueGenerated({ certId, issuedAtIso, institutionId, institutionName, recipientName, recipientEmail, data, template, orgId, issuedByLabel, ip }) {
   const tpl = await templateService.resolve(template || "classic", orgId);
-  const certificateId = generateCertificateId();
-  const issuedAtIso = new Date().toISOString();
   const issuedAtLabel = new Date(issuedAtIso).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" });
 
   const { buffer, signed, templateKey: usedTemplate } = await pdf.generateCertificatePdf({
     templateKey: tpl.key,
     accent: tpl.accent,
-    certificateId,
+    certificateId: certId,
     recipientName: recipientName.trim(),
     institutionName: institutionName || null,
     issuedAt: issuedAtLabel,
@@ -133,11 +133,11 @@ async function issueGenerated({ institutionId, institutionName, recipientName, r
     recipientEmail,
     data,
     fileBuffer: buffer,
-    fileName: `${certificateId}.pdf`,
+    fileName: `${certId}.pdf`,
     mimeType: "application/pdf",
     issuedByLabel,
     ip,
-    certificateId,
+    certificateId: certId,
     artifactType: "generated",
     templateKey: usedTemplate,
     pdfHash,
@@ -146,4 +146,13 @@ async function issueGenerated({ institutionId, institutionName, recipientName, r
   });
 }
 
-module.exports = { issueToInstitution, issueGenerated, listTemplates: pdf.listTemplates };
+/**
+ * Mode GENERATE sinkron: buat certId + issuedAtIso baru lalu render & issue langsung.
+ */
+async function issueGenerated(args) {
+  const certId = generateCertificateId();
+  const issuedAtIso = new Date().toISOString();
+  return renderAndIssueGenerated({ certId, issuedAtIso, ...args });
+}
+
+module.exports = { issueToInstitution, issueGenerated, renderAndIssueGenerated, listTemplates: pdf.listTemplates };

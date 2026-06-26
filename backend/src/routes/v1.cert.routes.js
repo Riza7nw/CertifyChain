@@ -8,4 +8,7 @@ const router = express.Router();
 
 router.get("/certificates/:certId/download", authenticateUser, c.downloadCertificate);
 
+// Status job render async (Fase C-scale) — polling frontend.
+router.get("/render-jobs/:jobId", authenticateUser, c.getRenderJobStatus);
+
 module.exports = router;
