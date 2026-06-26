@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Download, ShieldCheck, MailWarning, ScrollText, CheckCircle2, XCircle } from "lucide-react";
+import { Download, ShieldCheck, MailWarning, ScrollText, CheckCircle2, XCircle, ExternalLink, RotateCcw } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { useToast } from "../components/Toast";
 import Card from "../components/Card";
@@ -21,6 +21,7 @@ export default function MyCertificates() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState({});
   const [statusMap, setStatusMap] = useState({});
+  const [devLink, setDevLink] = useState(null); // tautan verifikasi (mode dev)
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -40,8 +41,14 @@ export default function MyCertificates() {
 
   async function resendVerification() {
     try {
-      await apiFetch("/v1/auth/resend-verification", { method: "POST", body: "{}" });
-      toast.success("Email verifikasi dikirim", "Cek kotak masuk Anda.");
+      const res = await apiFetch("/v1/auth/resend-verification", { method: "POST", body: "{}" });
+      if (res?.devVerifyUrl) {
+        // Mode dev: email tak benar-benar terkirim -> tampilkan tautan langsung.
+        setDevLink(res.devVerifyUrl);
+        toast.success("Tautan verifikasi dibuat", "Mode dev — gunakan tautan di bawah.");
+      } else {
+        toast.success("Email verifikasi dikirim", "Cek kotak masuk Anda.");
+      }
     } catch (e) {
       toast.error("Gagal mengirim", e.message);
     }
@@ -89,6 +96,29 @@ export default function MyCertificates() {
           <div className="mt-4">
             <Button icon={MailWarning} onClick={resendVerification}>Kirim ulang email verifikasi</Button>
           </div>
+
+          {devLink && (
+            <div className="mt-4 rounded-xl border border-info-subtle bg-info-subtle/40 p-4">
+              <p className="text-sm font-medium text-fg">Mode pengembangan — email tidak benar-benar terkirim</p>
+              <p className="mt-1 text-xs text-fg-muted">
+                Karena <code className="rounded bg-app px-1 py-0.5 font-mono">MAIL_PROVIDER=console</code>, tautan verifikasi tidak masuk inbox.
+                Buka tautan di bawah untuk memverifikasi, lalu muat ulang halaman ini.
+              </p>
+              <a
+                href={devLink}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-3 inline-flex items-center gap-1.5 break-all text-sm font-medium text-brand hover:underline"
+              >
+                <ExternalLink className="h-4 w-4 shrink-0" /> Buka tautan verifikasi
+              </a>
+              <div className="mt-3">
+                <Button size="sm" variant="secondary" icon={RotateCcw} onClick={() => window.location.reload()}>
+                  Saya sudah verifikasi — muat ulang
+                </Button>
+              </div>
+            </div>
+          )}
         </Card>
       </div>
     );

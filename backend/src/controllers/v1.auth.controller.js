@@ -76,9 +76,12 @@ const register = asyncHandler(async (req, res) => {
   }
 
   // Kirim email verifikasi (jangan gagalkan registrasi bila email error).
+  let devVerifyUrl = null;
   try {
     const vt = await authService.createEmailToken(user.id, "verify");
     await mailer.sendVerificationEmail(user.email, vt);
+    // Dev (MAIL_PROVIDER=console): tautan tidak benar-benar terkirim -> kirim ke UI.
+    if (config.mailProvider === "console") devVerifyUrl = mailer.verifyLink(vt);
   } catch (e) {
     console.error("[register] gagal kirim email verifikasi:", e.message);
   }
@@ -94,6 +97,7 @@ const register = asyncHandler(async (req, res) => {
       refreshToken, // juga di-set sebagai cookie httpOnly; klien browser pakai cookie
       user: { id: user.id, email: user.email, role: user.role },
       org: org ? { id: org.id, slug: org.slug, name: org.name, role: "OrgAdmin" } : null,
+      devVerifyUrl, // null di produksi; tautan verifikasi langsung di dev
     },
   });
 });
@@ -151,7 +155,10 @@ const resendVerification = asyncHandler(async (req, res) => {
   }
   const vt = await authService.createEmailToken(req.authUser.id, "verify");
   await mailer.sendVerificationEmail(req.authUser.email, vt);
-  res.json({ success: true, message: "Email verifikasi dikirim ulang." });
+  // Dev (MAIL_PROVIDER=console): email tak benar-benar terkirim -> kembalikan tautan
+  // agar bisa diklik langsung di UI. JANGAN aktif di produksi (kebocoran token).
+  const data = config.mailProvider === "console" ? { devVerifyUrl: mailer.verifyLink(vt) } : undefined;
+  res.json({ success: true, message: "Email verifikasi dikirim ulang.", data });
 });
 
 /** GET /api/v1/auth/me — profil + memberships (butuh access token). */

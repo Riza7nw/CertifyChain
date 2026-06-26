@@ -4,6 +4,7 @@ import PublicShell from "./components/shell/PublicShell";
 import RequireAuth from "./components/RequireAuth";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import VerifyEmail from "./pages/VerifyEmail";
 import OrgsPage from "./pages/OrgsPage";
 import OrgDashboard from "./pages/OrgDashboard";
 import IssueCert from "./pages/IssueCert";
@@ -34,6 +35,7 @@ export default function App() {
       {/* Auth */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
 
       {/* Publik (tanpa login) */}
       <Route path="/scan" element={<PublicShell><ScanVerify /></PublicShell>} />
