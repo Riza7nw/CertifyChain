@@ -83,12 +83,17 @@ async function issueToInstitution({
   const verificationUrl = qrService.buildVerificationUrl(certId);
   const qrCode = await qrService.generateQrDataUrl(verificationUrl);
 
+  // Fase C3: PDF generated bersifat privat -> tak ada fileUrl publik; unduh lewat
+  // endpoint terotentikasi. File uploaded tetap punya gateway URL publik.
+  const privateFile = artifactType === "generated";
+
   return {
     certificateId: certId,
     institutionId,
     recipientName: recipientName.trim(),
     fileCid: stored.cid,
-    fileUrl: storage.gatewayUrl(stored.cid),
+    fileUrl: privateFile ? null : storage.gatewayUrl(stored.cid),
+    fileAccess: privateFile ? "private" : "public",
     dataHash,
     pdfHash,
     artifactType,

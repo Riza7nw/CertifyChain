@@ -13,6 +13,7 @@ const certificateRoutes = require("./routes/certificate.routes");
 const authRoutes = require("./routes/auth.routes");
 const v1AuthRoutes = require("./routes/v1.auth.routes");
 const v1OrgRoutes = require("./routes/v1.org.routes");
+const v1CertRoutes = require("./routes/v1.cert.routes");
 const v1MeRoutes = require("./routes/v1.me.routes");
 const v1AdminRoutes = require("./routes/v1.admin.routes");
 const v1PublicRoutes = require("./routes/v1.public.routes");
@@ -58,6 +59,7 @@ app.get(
 // --- Routes ---
 app.use("/api/v1/auth", v1AuthRoutes);    // multi-tenant auth (Langkah 2)
 app.use("/api/v1", v1OrgRoutes);          // endpoint org-scoped (tenant isolation)
+app.use("/api/v1", v1CertRoutes);         // unduhan sertifikat terkontrol staf (Fase C3)
 app.use("/api/v1", v1MeRoutes);           // self-service penerima (Phase 7c)
 app.use("/api/v1", v1AdminRoutes);        // panel admin platform (Phase 7d)
 app.use("/api/v1", v1PublicRoutes);       // pencarian sertifikat publik (Phase 7e)

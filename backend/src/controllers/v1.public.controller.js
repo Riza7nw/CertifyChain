@@ -10,6 +10,7 @@ const config = require("../config");
 const asyncHandler = require("../utils/asyncHandler");
 const AppError = require("../utils/AppError");
 const { isValidBytes32 } = require("../utils/hash");
+const { isPrivateCert } = require("../utils/certPrivacy");
 
 /**
  * GET /api/v1/public/certificates?certId=&institution=&page=&limit=
@@ -60,7 +61,9 @@ const searchCertificates = asyncHandler(async (req, res) => {
         institutionName: nameById.get(r.institution_id) ?? null,
         status: r.status,
         issuedAt: r.issued_at,
-        fileUrl: r.file_cid ? storage.gatewayUrl(r.file_cid) : null,
+        // Fase C3: PDF generated berisi PII -> JANGAN bocorkan fileUrl publik
+        // (pencarian publik memang menyembunyikan PII penerima).
+        fileUrl: !isPrivateCert(r) && r.file_cid ? storage.gatewayUrl(r.file_cid) : null,
         // Verifikasi keaslian (on-chain) dilakukan lewat endpoint ini.
         verifyUrl: `${config.publicBaseUrl}/verify/${r.certificate_id}`,
       })),

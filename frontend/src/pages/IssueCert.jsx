@@ -14,7 +14,7 @@ import { TextField, TextAreaField, FileField, SelectField } from "../components/
 export default function IssueCert() {
   const { orgId } = useParams();
   const id = Number(orgId);
-  const { apiFetch, memberships } = useAuth();
+  const { apiFetch, apiBlob, memberships } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
   const orgName = memberships.find((m) => m.orgId === id)?.orgName || `Organisasi #${id}`;
@@ -29,6 +29,7 @@ export default function IssueCert() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [result, setResult] = useState(null);
+  const [dlBusy, setDlBusy] = useState(false);
 
   useEffect(() => {
     apiFetch(`/v1/orgs/${id}/templates`)
@@ -69,6 +70,27 @@ export default function IssueCert() {
     }
   }
 
+  // Fase C3: PDF generated bersifat privat (tanpa fileUrl publik) -> unduh lewat
+  // endpoint terotentikasi (issuer adalah anggota org penerbit).
+  async function downloadResult() {
+    setDlBusy(true);
+    try {
+      const blob = await apiBlob(`/v1/certificates/${result.certificateId}/download`);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `certificate-${result.certificateId.slice(0, 10)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error("Gagal mengunduh PDF", err.message);
+    } finally {
+      setDlBusy(false);
+    }
+  }
+
   const tab = (key, label, Icon) => (
     <button
       type="button"
@@ -105,11 +127,15 @@ export default function IssueCert() {
             <div className="space-y-3">
               <CopyField label="Certificate ID" value={result.certificateId} />
               {result.verificationUrl && <CopyField label="Link verifikasi" value={result.verificationUrl} />}
-              {result.fileUrl && (
+              {result.fileUrl ? (
                 <a href={result.fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm text-brand hover:underline">
                   <Download className="h-4 w-4" /> Unduh PDF sertifikat
                 </a>
-              )}
+              ) : result.fileCid ? (
+                <button type="button" onClick={downloadResult} disabled={dlBusy} className="inline-flex items-center gap-1.5 text-sm text-brand hover:underline disabled:opacity-50">
+                  <Download className="h-4 w-4" /> {dlBusy ? "Mengunduh…" : "Unduh PDF sertifikat"}
+                </button>
+              ) : null}
             </div>
           </div>
           <div className="mt-5 flex flex-wrap gap-2">

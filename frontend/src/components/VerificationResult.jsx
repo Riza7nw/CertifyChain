@@ -36,13 +36,17 @@ export default function VerificationResult({ valid, detail }) {
             <Row label="Institusi penerbit">{detail.institutionName || "—"}</Row>
             <Row label="Status">{detail.isValid ? <Badge tone="success" dot>Aktif</Badge> : <Badge tone="danger" dot>Dicabut</Badge>}</Row>
             <Row label="Diterbitkan">{detail.issuedAt ? new Date(detail.issuedAt).toLocaleString("id-ID") : "—"}</Row>
-            {detail.fileUrl && (
+            {detail.fileUrl ? (
               <Row label="File sertifikat">
                 <a href={detail.fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-brand hover:underline">
                   <FileText className="h-4 w-4" /> Buka file (IPFS)
                 </a>
               </Row>
-            )}
+            ) : detail.fileAccess === "private" ? (
+              <Row label="File sertifikat">
+                <span className="text-fg-faint">Privat — masuk sebagai penerima untuk mengunduh</span>
+              </Row>
+            ) : null}
           </div>
           <div className="mt-4 space-y-3">
             {detail.dataHash && <CopyField label="Data hash" value={detail.dataHash} />}

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Plus, ExternalLink, ScrollText, ShieldCheck, FileText, Palette } from "lucide-react";
+import { Plus, ExternalLink, ScrollText, ShieldCheck, Palette } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { useToast } from "../components/Toast";
 import Card from "../components/Card";
@@ -11,6 +11,7 @@ import StatCard from "../components/StatCard";
 import PageHeader from "../components/PageHeader";
 import DataTable from "../components/DataTable";
 import CertStatus from "../components/CertStatus";
+import FileCell from "../components/FileCell";
 import MiniAreaChart from "../components/MiniAreaChart";
 import EmptyState from "../components/EmptyState";
 import { SkeletonRows } from "../components/Skeleton";
@@ -130,7 +131,7 @@ export default function OrgDashboard() {
               { header: "Penerima", primary: true, cell: (r) => <span className="font-medium text-fg">{r.recipientName || "—"}</span> },
               { header: "Diterbitkan", cell: (r) => <span className="text-fg-muted">{r.issuedAt ? new Date(r.issuedAt).toLocaleDateString("id-ID") : "—"}</span> },
               { header: "Status", cell: (r) => <CertStatus status={r.status} /> },
-              { header: "File", cell: (r) => (r.fileUrl ? <a href={r.fileUrl} target="_blank" rel="noreferrer" className="inline-flex text-brand hover:text-brand-hover" aria-label="Buka file"><FileText className="h-4 w-4" /></a> : <span className="text-fg-faint">—</span>) },
+              { header: "File", cell: (r) => <FileCell cert={r} /> },
               { header: "", align: "right", hideLabel: true, cell: (r) => <Link to={`/verify/${r.certificateId}`} className="inline-flex items-center gap-1 text-sm text-brand hover:underline">Verifikasi <ExternalLink className="h-3.5 w-3.5" /></Link> },
             ]}
           />

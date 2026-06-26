@@ -8,6 +8,7 @@ const db = require("../db");
 const storage = require("../storage");
 const asyncHandler = require("../utils/asyncHandler");
 const AppError = require("../utils/AppError");
+const { isPrivateCert } = require("../utils/certPrivacy");
 
 const VALID_ROLES = ["admin", "user"];
 
@@ -145,7 +146,9 @@ const listAllCertificates = asyncHandler(async (req, res) => {
         recipientName: r.recipient_name,
         recipientEmail: r.recipient_email,
         fileCid: r.file_cid,
-        fileUrl: r.file_cid ? storage.gatewayUrl(r.file_cid) : null,
+        // Fase C3: file generated privat -> tanpa fileUrl publik (unduh via /download).
+        fileUrl: !isPrivateCert(r) && r.file_cid ? storage.gatewayUrl(r.file_cid) : null,
+        fileAccess: isPrivateCert(r) ? "private" : "public",
         status: r.status,
         issuedAt: r.issued_at,
         txHash: r.tx_hash,

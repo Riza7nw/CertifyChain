@@ -10,6 +10,7 @@ const db = require("../db");
 const asyncHandler = require("../utils/asyncHandler");
 const AppError = require("../utils/AppError");
 const { isValidBytes32 } = require("../utils/hash");
+const { isPrivateCert } = require("../utils/certPrivacy");
 
 /**
  * POST /api/institutions/:id/certificates   (multipart/form-data, JWT admin)
@@ -120,12 +121,16 @@ const getCertificate = asyncHandler(async (req, res) => {
   const row = await db.certificates.get(id);
   const institution = row ? await db.institutions.get(row.institution_id) : null;
 
+  // Fase C3: file generated bersifat privat -> jangan bocorkan fileUrl publik.
+  const privateFile = isPrivateCert(row);
+
   res.status(200).json({
     success: true,
     data: {
       ...onchain,
       recipientName: row?.recipient_name ?? null, // PII dari off-chain
-      fileUrl: onchain.fileCid ? storage.gatewayUrl(onchain.fileCid) : null,
+      fileUrl: !privateFile && onchain.fileCid ? storage.gatewayUrl(onchain.fileCid) : null,
+      fileAccess: privateFile ? "private" : "public",
       institutionName: institution?.name ?? null,
     },
   });

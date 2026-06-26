@@ -10,16 +10,22 @@ const storage = require("../storage");
 const blockchainService = require("../services/blockchain.service");
 const asyncHandler = require("../utils/asyncHandler");
 const AppError = require("../utils/AppError");
+const { isPrivateCert } = require("../utils/certPrivacy");
+const { sendCertificateFile } = require("../services/fileDelivery");
 
 // Bentuk item sertifikat untuk respons (tanpa membocorkan field internal).
+// fileUrl publik hanya untuk file uploaded; file generated (privat) diunduh lewat
+// endpoint /download terotentikasi (Fase C3).
 function toItem(r) {
+  const privateFile = isPrivateCert(r);
   return {
     certificateId: r.certificate_id,
     institutionId: r.institution_id,
     recipientName: r.recipient_name,
     recipientEmail: r.recipient_email,
     fileCid: r.file_cid,
-    fileUrl: r.file_cid ? storage.gatewayUrl(r.file_cid) : null,
+    fileUrl: !privateFile && r.file_cid ? storage.gatewayUrl(r.file_cid) : null,
+    fileAccess: privateFile ? "private" : "public",
     status: r.status,
     issuedAt: r.issued_at,
     txHash: r.tx_hash,
@@ -78,14 +84,9 @@ const downloadMyCertificate = asyncHandler(async (req, res) => {
     console.error("[me.download] gagal catat audit unduhan:", e.message);
   }
 
-  // Provider lokal (dev): file ada di disk -> kirim sebagai attachment.
-  if (typeof storage.getPath === "function" && storage.exists?.(cert.file_cid)) {
-    return res.sendFile(storage.getPath(cert.file_cid), {
-      headers: { "Content-Disposition": `attachment; filename="certificate-${cert.certificate_id}"` },
-    });
-  }
-  // Provider IPFS/Pinata: tidak ada file lokal -> arahkan ke gateway publik.
-  return res.redirect(storage.gatewayUrl(cert.file_cid));
+  // Kirim file (lokal -> attachment; IPFS/Pinata -> redirect gateway). Logika
+  // pengiriman dipakai bersama dengan endpoint unduhan staf (Fase C3).
+  return sendCertificateFile(res, cert);
 });
 
 /**
