@@ -37,8 +37,10 @@ const config = {
   refreshTokenTtlDays: parseInt(process.env.REFRESH_TOKEN_TTL_DAYS || "7", 10),
 
   // --- Email (Phase 7b: verifikasi email) ---
-  mailProvider: (process.env.MAIL_PROVIDER || "console").toLowerCase(), // console (dev) | ...
+  mailProvider: (process.env.MAIL_PROVIDER || "console").toLowerCase(), // console (dev) | resend
   mailFrom: process.env.MAIL_FROM || "CertifyChain <no-reply@certifychain.local>",
+  // Resend (https://resend.com) — provider email produksi via HTTP API.
+  resendApiKey: process.env.RESEND_API_KEY || "",
   emailVerifyTtlHours: parseInt(process.env.EMAIL_VERIFY_TTL_HOURS || "24", 10),
   // CORS allowlist (origin frontend). Wajib spesifik karena cookie pakai credentials.
   corsOrigins: (process.env.CORS_ORIGINS || "http://localhost:5173")

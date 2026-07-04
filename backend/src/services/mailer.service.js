@@ -14,8 +14,33 @@ async function sendEmail({ to, subject, text }) {
     console.log("=========================\n");
     return;
   }
-  // TODO: integrasi provider nyata (Resend/SES/SMTP).
-  throw new Error(`MAIL_PROVIDER '${config.mailProvider}' belum didukung.`);
+
+  // Resend (https://resend.com) — kirim via HTTP API (fetch bawaan, tanpa dependency).
+  // PRODUKSI: MAIL_FROM harus memakai domain yang sudah diverifikasi di Resend.
+  if (config.mailProvider === "resend") {
+    if (!config.resendApiKey) throw new Error("RESEND_API_KEY belum diset (MAIL_PROVIDER=resend).");
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${config.resendApiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ from: config.mailFrom, to: [to], subject, text }),
+    });
+    if (!res.ok) {
+      let detail = "";
+      try {
+        const j = await res.json();
+        detail = j?.message || j?.name || JSON.stringify(j);
+      } catch {
+        /* respons non-JSON */
+      }
+      throw new Error(`Resend gagal mengirim (HTTP ${res.status})${detail ? `: ${detail}` : ""}`);
+    }
+    return;
+  }
+
+  throw new Error(`MAIL_PROVIDER '${config.mailProvider}' belum didukung (pakai: console | resend).`);
 }
 
 /** Link verifikasi -> halaman frontend yang akan memanggil API verify-email. */
