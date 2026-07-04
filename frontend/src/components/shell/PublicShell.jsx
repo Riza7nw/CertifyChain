@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { BadgeCheck } from "lucide-react";
 import ThemeToggle from "../ThemeToggle";
+import PageTransition from "../motion/PageTransition";
 
 // Layout halaman PUBLIK (Phase 8): header ringan + footer "trust". Tanpa login.
 export default function PublicShell({ children }) {
@@ -8,7 +9,7 @@ export default function PublicShell({ children }) {
     <div className="flex min-h-screen flex-col bg-app text-fg">
       <header className="sticky top-0 z-20 border-b border-line bg-app/80 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3 sm:px-6">
-          <Link to="/verify" className="flex items-center gap-2.5">
+          <Link to="/" className="flex items-center gap-2.5">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-brand text-brand-fg">
               <BadgeCheck className="h-[18px] w-[18px]" strokeWidth={2.2} />
             </span>
@@ -33,7 +34,7 @@ export default function PublicShell({ children }) {
       </header>
 
       <main className="flex-1 px-4 py-8 sm:px-6">
-        <div className="mx-auto max-w-2xl animate-fade-in">{children}</div>
+        <PageTransition className="mx-auto max-w-2xl">{children}</PageTransition>
       </main>
 
       <footer className="border-t border-line py-4 text-center text-xs text-fg-faint">

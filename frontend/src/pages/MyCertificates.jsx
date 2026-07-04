@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Download, ShieldCheck, MailWarning, ScrollText, CheckCircle2, XCircle, ExternalLink, RotateCcw } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { useToast } from "../components/Toast";
@@ -12,6 +13,7 @@ import Pagination from "../components/Pagination";
 import CertStatus from "../components/CertStatus";
 import EmptyState from "../components/EmptyState";
 import { SkeletonRows } from "../components/Skeleton";
+import { fadeInUp, stagger } from "../lib/motion";
 
 export default function MyCertificates() {
   const { apiFetch, apiBlob, emailVerified, user } = useAuth();
@@ -132,11 +134,11 @@ export default function MyCertificates() {
         <Card><SkeletonRows rows={3} /></Card>
       ) : data?.items?.length ? (
         <>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <motion.div variants={stagger(0.05)} initial="hidden" animate="visible" className="grid gap-3 sm:grid-cols-2">
             {data.items.map((c) => {
               const st = statusMap[c.certificateId];
               return (
-                <div key={c.certificateId} className="flex flex-col rounded-xl border border-line bg-surface p-4 shadow-xs">
+                <motion.div variants={fadeInUp} key={c.certificateId} className="flex flex-col rounded-xl border border-line bg-surface p-4 shadow-xs">
                   <div className="mb-3 flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2.5">
                       <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-subtle text-brand-subtle-fg">
@@ -163,10 +165,10 @@ export default function MyCertificates() {
                     <Button size="sm" variant="secondary" icon={ShieldCheck} loading={busy[c.certificateId] === "status"} onClick={() => checkStatus(c.certificateId)}>Cek status</Button>
                     <Button size="sm" icon={Download} loading={busy[c.certificateId] === "download"} disabled={!c.fileCid} onClick={() => download(c.certificateId)}>Unduh</Button>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
-          </div>
+          </motion.div>
           {data?.pagination && (
             <Pagination page={data.pagination.page} totalPages={data.pagination.totalPages} total={data.pagination.total} onChange={setPage} />
           )}

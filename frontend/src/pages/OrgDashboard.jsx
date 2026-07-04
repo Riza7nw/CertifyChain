@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Plus, ExternalLink, ScrollText, ShieldCheck, Palette } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { useToast } from "../components/Toast";
@@ -15,6 +16,7 @@ import FileCell from "../components/FileCell";
 import MiniAreaChart from "../components/MiniAreaChart";
 import EmptyState from "../components/EmptyState";
 import { SkeletonRows } from "../components/Skeleton";
+import { fadeInUp, stagger } from "../lib/motion";
 
 export default function OrgDashboard() {
   const { orgId } = useParams();
@@ -76,7 +78,7 @@ export default function OrgDashboard() {
   return (
     <div className="space-y-6">
       <PageHeader
-        crumbs={[{ label: "Organisasi", to: "/" }, { label: orgName }]}
+        crumbs={[{ label: "Organisasi", to: "/orgs" }, { label: orgName }]}
         title={orgName}
         description={`Peran Anda: ${role || "—"}`}
         actions={
@@ -101,16 +103,20 @@ export default function OrgDashboard() {
         </Alert>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <StatCard label="Total sertifikat" value={stats?.totals?.certificates ?? "—"} icon={ScrollText} />
-        <StatCard label="Verifikasi (30h)" value={verifiedTotal} icon={ShieldCheck} />
-        <div className="rounded-xl border border-line bg-surface px-4 py-3.5 shadow-xs">
+      <motion.div variants={stagger(0.07)} initial="hidden" animate="visible" className="grid gap-3 sm:grid-cols-3">
+        <motion.div variants={fadeInUp}>
+          <StatCard label="Total sertifikat" value={stats?.totals?.certificates ?? "—"} icon={ScrollText} />
+        </motion.div>
+        <motion.div variants={fadeInUp}>
+          <StatCard label="Verifikasi (30h)" value={verifiedTotal} icon={ShieldCheck} />
+        </motion.div>
+        <motion.div variants={fadeInUp} className="rounded-xl border border-line bg-surface px-4 py-3.5 shadow-xs">
           <span className="text-xs font-medium text-fg-muted">Status on-chain</span>
           <div className="mt-2">
             {provisioned ? <Badge tone="success" dot>Aktif</Badge> : <Badge tone="warning" dot>Belum</Badge>}
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       <Card title="Aktivitas verifikasi" description="30 hari terakhir">
         <MiniAreaChart data={verifiedDaily} height={80} className="text-brand" />

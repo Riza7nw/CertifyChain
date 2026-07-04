@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Search, ShieldCheck, FileSearch } from "lucide-react";
 import Card from "../components/Card";
 import Button from "../components/Button";
@@ -9,6 +10,7 @@ import CertStatus from "../components/CertStatus";
 import EmptyState from "../components/EmptyState";
 import { TextField } from "../components/Field";
 import { searchPublicCertificates } from "../api/certificateApi";
+import { fadeInUp, stagger } from "../lib/motion";
 
 export default function PublicSearch() {
   const navigate = useNavigate();
@@ -72,9 +74,9 @@ export default function PublicSearch() {
             <EmptyState icon={FileSearch} title="Tidak ada hasil" description="Tidak ada sertifikat yang cocok dengan pencarian." />
           ) : (
             <>
-              <div className="space-y-2.5">
+              <motion.div key={`hasil-${page}`} variants={stagger(0.05)} initial="hidden" animate="visible" className="space-y-2.5">
                 {data.items.map((c) => (
-                  <div key={c.certificateId} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line p-4">
+                  <motion.div variants={fadeInUp} key={c.certificateId} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line p-4">
                     <div className="min-w-0">
                       <p className="font-medium text-fg">{c.institutionName || "Institusi —"}</p>
                       <code className="mt-0.5 block truncate font-mono text-xs text-fg-faint">{c.certificateId}</code>
@@ -84,9 +86,9 @@ export default function PublicSearch() {
                       <CertStatus status={c.status} />
                       <Button size="sm" variant="secondary" icon={ShieldCheck} onClick={() => navigate(`/verify/${c.certificateId}`)}>Verifikasi</Button>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
               {data.pagination.totalPages > 1 && (
                 <div className="mt-4 flex items-center justify-between text-sm">
                   <Button size="sm" variant="secondary" disabled={page <= 1} onClick={() => run(page - 1)}>← Sebelumnya</Button>

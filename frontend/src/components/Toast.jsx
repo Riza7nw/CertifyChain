@@ -1,5 +1,7 @@
 import { createContext, useContext, useCallback, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { CheckCircle2, AlertTriangle, Info, XCircle, X } from "lucide-react";
+import { EASE } from "../lib/motion";
 
 // Toast transient (Phase 8 / Fase 2). useToast() -> { toast, success, error, info }.
 const ToastCtx = createContext(null);
@@ -39,12 +41,18 @@ export function ToastProvider({ children }) {
     <ToastCtx.Provider value={api}>
       {children}
       <div className="pointer-events-none fixed bottom-4 right-4 z-[60] flex w-[min(92vw,360px)] flex-col gap-2">
+        <AnimatePresence mode="popLayout">
         {items.map((t) => {
           const Icon = ICONS[t.tone] || Info;
           return (
-            <div
+            <motion.div
               key={t.id}
-              className="pointer-events-auto flex items-start gap-3 rounded-xl border border-line bg-surface px-3.5 py-3 shadow-pop animate-scale-in"
+              layout
+              initial={{ opacity: 0, x: 24, scale: 0.98 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: 24 }}
+              transition={{ duration: 0.25, ease: EASE }}
+              className="pointer-events-auto flex items-start gap-3 rounded-xl border border-line bg-surface px-3.5 py-3 shadow-pop"
             >
               <Icon className={`mt-0.5 h-[18px] w-[18px] flex-shrink-0 ${TONE[t.tone]}`} strokeWidth={2} />
               <div className="min-w-0 flex-1">
@@ -58,9 +66,10 @@ export function ToastProvider({ children }) {
               >
                 <X className="h-4 w-4" />
               </button>
-            </div>
+            </motion.div>
           );
         })}
+        </AnimatePresence>
       </div>
     </ToastCtx.Provider>
   );

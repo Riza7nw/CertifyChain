@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import { Search, Building2, ScrollText, QrCode, Users, ListChecks, BadgeCheck, CornerDownLeft } from "lucide-react";
+import { springPop } from "../lib/motion";
 import { useAuth } from "../auth/AuthContext";
 import { isBytes32 } from "../utils/qr";
 
@@ -14,7 +16,7 @@ export default function CommandPalette({ open, onClose }) {
 
   const nav = useMemo(() => {
     const items = [
-      { icon: Building2, label: "Organisasi", to: "/" },
+      { icon: Building2, label: "Organisasi", to: "/orgs" },
       { icon: ScrollText, label: "Sertifikat saya", to: "/me/certificates" },
       { icon: QrCode, label: "Scan QR", to: "/scan" },
       { icon: Search, label: "Cari sertifikat publik", to: "/search" },
@@ -46,7 +48,6 @@ export default function CommandPalette({ open, onClose }) {
   }, [open]);
   useEffect(() => setActive(0), [q]);
 
-  if (!open) return null;
   const go = (item) => {
     onClose();
     navigate(item.to);
@@ -60,9 +61,23 @@ export default function CommandPalette({ open, onClose }) {
   }
 
   return (
+    <AnimatePresence mode="wait">
+      {open && (
     <div className="fixed inset-0 z-[70] flex items-start justify-center p-4 pt-[12vh]">
-      <div className="absolute inset-0 bg-black/45 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-line bg-surface shadow-pop animate-scale-in">
+      <motion.div
+        className="absolute inset-0 bg-black/45 backdrop-blur-sm"
+        onClick={onClose}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.15 }}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.97, y: -8 }}
+        animate={{ opacity: 1, scale: 1, y: 0, transition: springPop }}
+        exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.12 } }}
+        className="relative w-full max-w-lg overflow-hidden rounded-2xl border border-line bg-surface shadow-pop"
+      >
         <div className="flex items-center gap-2.5 border-b border-line px-4">
           <Search className="h-4 w-4 flex-shrink-0 text-fg-faint" />
           <input
@@ -97,7 +112,9 @@ export default function CommandPalette({ open, onClose }) {
             })
           )}
         </div>
-      </div>
+      </motion.div>
     </div>
+      )}
+    </AnimatePresence>
   );
 }

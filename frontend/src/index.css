@@ -102,6 +102,26 @@ body {
   background-clip: content-box;
 }
 
+/* ============================================================
+   Landing (Fase B) — scroll mulus (anchor) + grid halus token-based.
+   ============================================================ */
+html {
+  scroll-behavior: smooth;
+}
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+.landing-grid {
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(ellipse 90% 65% at 50% 30%, #000 30%, transparent 72%);
+  mask-image: radial-gradient(ellipse 90% 65% at 50% 30%, #000 30%, transparent 72%);
+}
+
 /* Skeleton shimmer */
 .skeleton {
   position: relative;
@@ -114,7 +134,12 @@ body {
   inset: 0;
   transform: translateX(-100%);
   background: linear-gradient(90deg, transparent, var(--border), transparent);
-  animation: shimmer 1.5s infinite;
+  animation: shimmer 1.8s infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after {
+    animation: none;
+  }
 }
 @keyframes shimmer {
   100% {

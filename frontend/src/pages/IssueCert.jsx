@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { motion, useReducedMotion } from "framer-motion";
 import { Plus, RotateCcw, ExternalLink, Download, Sparkles, Upload, FileSignature, Loader2 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { useToast } from "../components/Toast";
@@ -10,6 +11,7 @@ import Badge from "../components/Badge";
 import PageHeader from "../components/PageHeader";
 import CopyField from "../components/CopyField";
 import { TextField, TextAreaField, FileField, SelectField } from "../components/Field";
+import { EASE, springPop } from "../lib/motion";
 
 export default function IssueCert() {
   const { orgId } = useParams();
@@ -18,6 +20,7 @@ export default function IssueCert() {
   const toast = useToast();
   const navigate = useNavigate();
   const orgName = memberships.find((m) => m.orgId === id)?.orgName || `Organisasi #${id}`;
+  const reduce = useReducedMotion();
 
   const [mode, setMode] = useState("generate"); // 'generate' | 'upload'
   const [recipientName, setRecipientName] = useState("");
@@ -152,17 +155,22 @@ export default function IssueCert() {
       />
 
       {result ? (
+        <motion.div initial={{ opacity: 0, scale: reduce ? 1 : 0.96, y: reduce ? 0 : 10 }} animate={{ opacity: 1, scale: 1, y: 0, transition: springPop }}>
         <Card>
           <Alert type="success" title="Sertifikat berhasil diterbitkan">Bagikan QR atau link verifikasi di bawah.</Alert>
           {result.signed && <div className="mt-3"><Badge tone="brand" icon={FileSignature}>Ditandatangani digital (PAdES)</Badge></div>}
           <div className="mt-4 grid gap-5 sm:grid-cols-[170px_1fr] sm:items-start">
             {result.qrCode && (
-              <div className="flex flex-col items-center gap-2">
+              <motion.div
+                initial={{ opacity: 0, scale: reduce ? 1 : 0.9 }}
+                animate={{ opacity: 1, scale: 1, transition: { ...springPop, delay: 0.12 } }}
+                className="flex flex-col items-center gap-2"
+              >
                 <img src={result.qrCode} alt="QR" className="h-40 w-40 rounded-xl border border-line bg-white p-2" />
                 <a href={result.qrCode} download={`qr-${result.certificateId.slice(0, 10)}.png`} className="inline-flex items-center gap-1 text-xs font-medium text-brand hover:underline">
                   <Download className="h-3.5 w-3.5" /> Unduh QR
                 </a>
-              </div>
+              </motion.div>
             )}
             <div className="space-y-3">
               <CopyField label="Certificate ID" value={result.certificateId} />
@@ -183,6 +191,7 @@ export default function IssueCert() {
             <Button variant="secondary" icon={RotateCcw} onClick={() => setResult(null)}>Terbitkan lagi</Button>
           </div>
         </Card>
+        </motion.div>
       ) : jobInfo?.status === "failed" ? (
         <Card>
           <Alert type="error" title="Render sertifikat gagal">
@@ -196,13 +205,23 @@ export default function IssueCert() {
       ) : jobId ? (
         <Card>
           <div className="flex flex-col items-center gap-3 py-8 text-center">
-            <Loader2 className="h-10 w-10 animate-spin text-brand" strokeWidth={2} />
+            <Loader2 className="h-10 w-10 animate-spin text-brand motion-reduce:animate-none" strokeWidth={2} />
             <div>
               <p className="text-base font-semibold text-fg">Sedang memproses sertifikat</p>
               <p className="mt-1 text-sm text-fg-muted">
                 {jobInfo?.status === "processing" ? "Merender PDF & mencatat ke blockchain…" : "Menunggu giliran di antrian…"}
               </p>
             </div>
+            {/* Bilah progres indeterminate (transform-only); mati saat reduced motion */}
+            {!reduce && (
+              <div className="h-1 w-48 overflow-hidden rounded-full bg-surface-hover" aria-hidden="true">
+                <motion.div
+                  className="h-full w-1/3 rounded-full bg-brand"
+                  animate={{ x: ["-110%", "310%"] }}
+                  transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                />
+              </div>
+            )}
             <Badge tone={jobInfo?.status === "processing" ? "brand" : "neutral"} dot>
               {jobInfo?.status === "processing" ? "Dirender" : "Dalam antrian"}
               {jobInfo?.attempts > 1 ? ` · percobaan ${jobInfo.attempts}` : ""}

@@ -50,15 +50,23 @@ export default {
         md: "0 4px 14px rgba(16,18,27,0.08)",
         lg: "0 10px 30px rgba(16,18,27,0.12)",
         pop: "0 8px 24px rgba(16,18,27,0.16)",
+        glow: "0 8px 32px rgba(94,79,219,0.18)",
       },
       keyframes: {
         "fade-in": { from: { opacity: 0, transform: "translateY(6px)" }, to: { opacity: 1, transform: "translateY(0)" } },
         "scale-in": { from: { opacity: 0, transform: "scale(0.97)" }, to: { opacity: 1, transform: "scale(1)" } },
         shimmer: { "100%": { transform: "translateX(100%)" } },
+        // Landing (Fase B): aurora + partikel lembut — hanya transform.
+        float: { "0%, 100%": { transform: "translateY(0)" }, "50%": { transform: "translateY(-10px)" } },
+        "aurora-a": { "0%, 100%": { transform: "translate(0, 0) scale(1)" }, "50%": { transform: "translate(40px, -30px) scale(1.1)" } },
+        "aurora-b": { "0%, 100%": { transform: "translate(0, 0) scale(1)" }, "50%": { transform: "translate(-30px, 20px) scale(1.06)" } },
       },
       animation: {
         "fade-in": "fade-in 0.25s cubic-bezier(.2,.8,.2,1)",
         "scale-in": "scale-in 0.16s cubic-bezier(.2,.8,.2,1)",
+        float: "float 8s ease-in-out infinite",
+        "aurora-a": "aurora-a 16s ease-in-out infinite",
+        "aurora-b": "aurora-b 20s ease-in-out infinite",
       },
     },
   },

@@ -46,7 +46,7 @@ export default function WorkspaceSwitcher({ onNavigate }) {
         Akun Pribadi
       </MenuItem>
       {isPlatformAdmin && (
-        <MenuItem icon={LayoutGrid} onClick={() => go(() => navigate("/"))}>
+        <MenuItem icon={LayoutGrid} onClick={() => go(() => navigate("/orgs"))}>
           Semua organisasi
         </MenuItem>
       )}

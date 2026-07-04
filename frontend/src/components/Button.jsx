@@ -29,7 +29,7 @@ export default function Button({
   ...props
 }) {
   const base =
-    "inline-flex items-center justify-center font-medium transition-colors select-none " +
+    "inline-flex items-center justify-center font-medium transition-[color,background-color,border-color,transform] duration-150 select-none " +
     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focusring focus-visible:ring-offset-2 focus-visible:ring-offset-app " +
     "active:scale-[0.985] disabled:opacity-55 disabled:pointer-events-none";
 

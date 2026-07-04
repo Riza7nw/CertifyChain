@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
 import { Building2, ChevronRight } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import PageHeader from "../components/PageHeader";
@@ -8,6 +9,7 @@ import Avatar from "../components/Avatar";
 import Alert from "../components/Alert";
 import EmptyState from "../components/EmptyState";
 import Skeleton from "../components/Skeleton";
+import { EASE, fadeInUp, stagger } from "../lib/motion";
 
 function RoleBadge({ role }) {
   const tone = role === "PlatformAdmin" ? "brand" : role === "OrgAdmin" ? "info" : role === "Issuer" ? "success" : "neutral";
@@ -54,10 +56,14 @@ export default function OrgsPage() {
         <EmptyState icon={Building2} title="Belum ada organisasi" description="Anda belum menjadi anggota organisasi mana pun." />
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2">
-        {orgs?.map((o) => (
-          <button
+      {orgs && orgs.length > 0 && (
+      <motion.div variants={stagger(0.06)} initial="hidden" animate="visible" className="grid gap-3 sm:grid-cols-2">
+        {orgs.map((o) => (
+          <motion.button
             key={o.id}
+            variants={fadeInUp}
+            whileHover={{ y: -3 }}
+            transition={{ duration: 0.2, ease: EASE }}
             onClick={() => open(o)}
             className="group flex flex-col rounded-xl border border-line bg-surface p-4 text-left shadow-xs transition-colors hover:border-line-strong hover:bg-surface-hover"
           >
@@ -76,9 +82,10 @@ export default function OrgsPage() {
                 <RoleBadge role={o.role} />
               </div>
             </div>
-          </button>
+          </motion.button>
         ))}
-      </div>
+      </motion.div>
+      )}
     </div>
   );
 }

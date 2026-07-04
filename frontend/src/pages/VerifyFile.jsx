@@ -1,6 +1,9 @@
 import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
+import { motion, useReducedMotion } from "framer-motion";
 import { UploadCloud, BadgeCheck, ShieldX, FileQuestion, FileText, FileSignature } from "lucide-react";
+import DrawnCheck from "../components/motion/DrawnCheck";
+import { EASE, springPop } from "../lib/motion";
 import Card from "../components/Card";
 import Button from "../components/Button";
 import Alert from "../components/Alert";
@@ -9,23 +12,37 @@ import Badge from "../components/Badge";
 import { verifyPdfFile } from "../api/certificateApi";
 
 function Verdict({ r }) {
+  const reduce = useReducedMotion();
   const authentic = r.match;
   const unknown = r.status === "UNKNOWN";
   const tone = authentic ? "bg-success-subtle text-success-fg" : unknown ? "bg-warning-subtle text-warning-fg" : "bg-danger-subtle text-danger-fg";
   const Icon = authentic ? BadgeCheck : unknown ? FileQuestion : ShieldX;
   const title = authentic ? "Sertifikat asli" : unknown ? "Tidak dikenali" : "Sertifikat diubah";
+  // Asli: spring scale + centang ter-draw. Diubah: shake halus sekali. Tak dikenali: fade.
+  const shake = !authentic && !unknown && !reduce;
 
   return (
     <div className="space-y-5">
-      <div className={`flex flex-col items-center gap-2 rounded-2xl border border-line px-6 py-8 text-center ${tone}`}>
+      <motion.div
+        key={r.status || String(authentic)}
+        initial={{ opacity: 0, scale: authentic && !reduce ? 0.94 : 1 }}
+        animate={{ opacity: 1, scale: 1, ...(shake ? { x: [0, -6, 6, -3, 3, 0] } : {}) }}
+        transition={authentic && !reduce ? springPop : { duration: 0.45, ease: EASE }}
+        className={`flex flex-col items-center gap-2 rounded-2xl border border-line px-6 py-8 text-center ${tone}`}
+      >
         <div className={`flex h-16 w-16 items-center justify-center rounded-full text-white ${authentic ? "bg-success" : unknown ? "bg-warning" : "bg-danger"}`}>
-          <Icon className="h-9 w-9" strokeWidth={2} />
+          {authentic && !reduce ? <DrawnCheck className="h-9 w-9" /> : <Icon className="h-9 w-9" strokeWidth={2} />}
         </div>
         <p className="text-xl font-semibold">{title}</p>
         <p className="max-w-md text-sm">{r.message}</p>
-      </div>
+      </motion.div>
 
       {r.certificateId && (
+        <motion.div
+          initial={{ opacity: 0, y: reduce ? 0 : 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, ease: EASE, delay: 0.15 }}
+        >
         <Card title="Detail">
           <div className="rounded-xl bg-app px-4">
             <Row label="Nama penerima">{r.recipientName || "—"}</Row>
@@ -38,6 +55,7 @@ function Verdict({ r }) {
             <Link to={`/verify/${r.certificateId}`}><Button variant="secondary" icon={FileText}>Lihat verifikasi on-chain</Button></Link>
           </div>
         </Card>
+        </motion.div>
       )}
     </div>
   );
