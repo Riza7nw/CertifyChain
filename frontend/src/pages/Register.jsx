@@ -27,7 +27,7 @@ export default function Register() {
     setLoading(true);
     try {
       await register({ email: form.email.trim(), password: form.password, name: form.name.trim() || undefined, orgName: form.orgName.trim() });
-      navigate("/", { replace: true });
+      navigate("/orgs", { replace: true });
     } catch (err) {
       setError(err.message);
     } finally {

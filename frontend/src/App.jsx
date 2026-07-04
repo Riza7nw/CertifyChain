@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import AppShell from "./components/shell/AppShell";
 import PublicShell from "./components/shell/PublicShell";
 import RequireAuth from "./components/RequireAuth";
+import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import VerifyEmail from "./pages/VerifyEmail";
@@ -18,9 +19,9 @@ import PublicSearch from "./pages/PublicSearch";
 import VerifyFile from "./pages/VerifyFile";
 import ScanVerify from "./pages/ScanVerify";
 
-// Routing multi-tenant (Langkah 2).
-// - PUBLIK: /login, /register, /scan, /verify/:id (target QR).
-// - DASHBOARD (RequireAuth + Layout): /, /orgs/:orgId, /orgs/:orgId/issue, /verify.
+// Routing multi-tenant.
+// - PUBLIK: / (landing), /login, /register, /scan, /verify/:id (target QR).
+// - DASHBOARD (RequireAuth + Layout): /orgs, /orgs/:orgId, /orgs/:orgId/issue, /verify.
 function Protected({ children }) {
   return (
     <RequireAuth>
@@ -32,6 +33,9 @@ function Protected({ children }) {
 export default function App() {
   return (
     <Routes>
+      {/* Landing publik (full-bleed, tanpa shell) */}
+      <Route path="/" element={<Landing />} />
+
       {/* Auth */}
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
@@ -44,7 +48,7 @@ export default function App() {
       <Route path="/verify/:id" element={<PublicShell><PublicVerify /></PublicShell>} />
 
       {/* Dashboard (butuh login) */}
-      <Route path="/" element={<Protected><OrgsPage /></Protected>} />
+      <Route path="/orgs" element={<Protected><OrgsPage /></Protected>} />
       <Route path="/orgs/:orgId" element={<Protected><OrgDashboard /></Protected>} />
       <Route path="/orgs/:orgId/issue" element={<Protected><IssueCert /></Protected>} />
       <Route path="/orgs/:orgId/templates" element={<Protected><Templates /></Protected>} />
