@@ -13,6 +13,7 @@ const pdf = require("../pdf");
 const storage = require("../storage");
 const db = require("../db");
 const { generateDataHash, generateCertificateId, keccak256Bytes } = require("../utils/hash");
+const { validateCertificatePdf } = require("../utils/certificatePdf");
 
 /**
  * Pipeline bersama: simpan file -> dataHash -> on-chain -> read-model -> QR.
@@ -20,7 +21,6 @@ const { generateDataHash, generateCertificateId, keccak256Bytes } = require("../
  * @param {string} [p.certificateId]  bila sudah dibuat di luar (mode generate); default acak
  * @param {string} [p.artifactType]   'uploaded' | 'generated'
  * @param {string} [p.templateKey]    key template (mode generate)
- * @param {string} [p.pdfHash]        keccak256 byte PDF (mode generate)
  * @param {string} [p.issuedAtIso]    timestamp ISO (agar konsisten dgn isi PDF)
  */
 async function issueToInstitution({
@@ -36,10 +36,15 @@ async function issueToInstitution({
   certificateId,
   artifactType = "uploaded",
   templateKey = null,
-  pdfHash = null,
   signed = false,
   issuedAtIso,
 }) {
+  // Shared by both upload endpoints and generated PDFs. Reject before storage
+  // or any blockchain transaction; never convert the issuer's original PDF.
+  await validateCertificatePdf(fileBuffer, fileName, mimeType);
+  mimeType = "application/pdf";
+  const pdfHash = keccak256Bytes(fileBuffer);
+
   // 1. Simpan file -> storage (CID = hash konten = jangkar anti-tamper)
   const stored = await storage.add(fileBuffer, fileName);
 
@@ -125,8 +130,6 @@ async function renderAndIssueGenerated({ certId, issuedAtIso, institutionId, ins
     body: data || null,
   });
 
-  const pdfHash = keccak256Bytes(buffer);
-
   return issueToInstitution({
     institutionId,
     recipientName,
@@ -140,7 +143,6 @@ async function renderAndIssueGenerated({ certId, issuedAtIso, institutionId, ins
     certificateId: certId,
     artifactType: "generated",
     templateKey: usedTemplate,
-    pdfHash,
     signed,
     issuedAtIso,
   });

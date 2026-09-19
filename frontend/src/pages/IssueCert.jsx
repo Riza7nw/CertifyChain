@@ -12,6 +12,7 @@ import PageHeader from "../components/PageHeader";
 import CopyField from "../components/CopyField";
 import { TextField, TextAreaField, FileField, SelectField } from "../components/Field";
 import { EASE, springPop } from "../lib/motion";
+import { resolveFileUrl, validatePdfSelection, validatePdfHeader } from "../utils/certificateFiles";
 
 export default function IssueCert() {
   const { orgId } = useParams();
@@ -22,7 +23,7 @@ export default function IssueCert() {
   const orgName = memberships.find((m) => m.orgId === id)?.orgName || `Organisasi #${id}`;
   const reduce = useReducedMotion();
 
-  const [mode, setMode] = useState("generate"); // 'generate' | 'upload'
+  const [mode, setMode] = useState("upload"); // 'generate' | 'upload'
   const [recipientName, setRecipientName] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [data, setData] = useState("");
@@ -74,14 +75,30 @@ export default function IssueCert() {
   }, [jobId, apiFetch, toast]);
 
   const selectedAccent = templates.find((t) => t.id === templateKey)?.accent;
+  const resultFileUrl = resolveFileUrl(result?.fileUrl);
+
+  function selectPdf(e) {
+    const selected = e.target.files?.[0] || null;
+    const message = selected ? validatePdfSelection(selected) : null;
+    setFile(message ? null : selected);
+    setError(message);
+    if (message) e.target.value = "";
+  }
 
   async function submit(e) {
     e.preventDefault();
     setError(null);
     if (!recipientName.trim()) return setError("Nama penerima wajib diisi.");
-    if (mode === "upload" && !file) return setError("File sertifikat wajib diunggah.");
+    if (mode === "upload") {
+      const message = validatePdfSelection(file);
+      if (message) return setError(message);
+    }
     setLoading(true);
     try {
+      if (mode === "upload") {
+        const message = await validatePdfHeader(file);
+        if (message) return setError(message);
+      }
       let res;
       if (mode === "generate") {
         res = await apiFetch(`/v1/orgs/${id}/certificates/generate`, {
@@ -137,7 +154,8 @@ export default function IssueCert() {
   const tab = (key, label, Icon) => (
     <button
       type="button"
-      onClick={() => setMode(key)}
+      disabled={loading}
+      onClick={() => { setMode(key); setError(null); }}
       className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
         mode === key ? "bg-surface text-fg shadow-xs" : "text-fg-muted hover:text-fg"
       }`}
@@ -151,7 +169,7 @@ export default function IssueCert() {
       <PageHeader
         crumbs={[{ label: orgName, to: `/orgs/${id}` }, { label: "Terbitkan" }]}
         title="Terbitkan sertifikat"
-        description="Generate PDF dari template, atau unggah file sendiri. Hash & CID dicatat di blockchain."
+        description="Unggah PDF asli untuk diterbitkan, atau buat PDF baru dari template."
       />
 
       {result ? (
@@ -175,9 +193,9 @@ export default function IssueCert() {
             <div className="space-y-3">
               <CopyField label="Certificate ID" value={result.certificateId} />
               {result.verificationUrl && <CopyField label="Link verifikasi" value={result.verificationUrl} />}
-              {result.fileUrl ? (
-                <a href={result.fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm text-brand hover:underline">
-                  <Download className="h-4 w-4" /> Unduh PDF sertifikat
+              {resultFileUrl ? (
+                <a href={resultFileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-sm text-brand hover:underline">
+                  <ExternalLink className="h-4 w-4" /> Buka PDF sertifikat
                 </a>
               ) : result.fileCid ? (
                 <button type="button" onClick={downloadResult} disabled={dlBusy} className="inline-flex items-center gap-1.5 text-sm text-brand hover:underline disabled:opacity-50">
@@ -235,8 +253,8 @@ export default function IssueCert() {
       ) : (
         <Card>
           <div className="mb-4 flex gap-1 rounded-xl bg-app p-1">
-            {tab("generate", "Generate PDF", Sparkles)}
-            {tab("upload", "Unggah file", Upload)}
+            {tab("upload", "Unggah PDF asli", Upload)}
+            {tab("generate", "Buat PDF dari template", Sparkles)}
           </div>
           <form onSubmit={submit} className="space-y-4">
             {error && <Alert type="error">{error}</Alert>}
@@ -247,6 +265,7 @@ export default function IssueCert() {
 
             {mode === "generate" ? (
               <div>
+                <p className="mb-3 text-sm text-fg-muted">Mode ini membuat dokumen PDF baru menggunakan desain template yang dipilih.</p>
                 <SelectField id="templateKey" label="Template" value={templateKey} onChange={(e) => setTemplateKey(e.target.value)} disabled={loading || !templates.length} helper="Desain & branding PDF sertifikat.">
                   {templates.length ? templates.map((t) => <option key={t.id} value={t.id}>{t.name}{t.scope === "org" ? " (institusi)" : ""}</option>) : <option value="classic">Classic</option>}
                 </SelectField>
@@ -259,7 +278,7 @@ export default function IssueCert() {
                 )}
               </div>
             ) : (
-              <FileField id="file" label="File sertifikat" required accept="application/pdf,image/*" fileName={file?.name} onChange={(e) => setFile(e.target.files?.[0] || null)} disabled={loading} helper="PDF atau gambar, maksimal 10 MB." />
+              <FileField id="file" label="PDF sertifikat asli" required accept=".pdf,application/pdf" fileName={file?.name} onChange={selectPdf} disabled={loading} helper="Hanya PDF, maksimal 10 MB. File diterbitkan persis seperti yang Anda unggah." />
             )}
 
             <TextAreaField id="data" label={mode === "generate" ? "Isi / deskripsi sertifikat (opsional)" : "Metadata tambahan (opsional)"} placeholder="mis. Sarjana Teknik Informatika — 2026" value={data} onChange={(e) => setData(e.target.value)} disabled={loading} helper="Tercetak di PDF (mode generate) & masuk hash integritas." />

@@ -5,6 +5,7 @@ import Badge from "./Badge";
 import CopyField from "./CopyField";
 import DrawnCheck from "./motion/DrawnCheck";
 import { EASE, springPop } from "../lib/motion";
+import { resolveFileUrl } from "../utils/certificateFiles";
 
 // Hasil verifikasi sertifikat (Phase 8 / Fase 3) — dipakai bersama halaman publik
 // (/verify/:id) & internal (/verify). detail = gabungan on-chain + read-model.
@@ -19,6 +20,7 @@ function Row({ label, children }) {
 
 export default function VerificationResult({ valid, detail }) {
   const reduce = useReducedMotion();
+  const fileUrl = resolveFileUrl(detail?.fileUrl);
   // Sukses: spring scale + centang ter-draw. Gagal: shake halus sekali.
   return (
     <div className="space-y-5">
@@ -56,10 +58,10 @@ export default function VerificationResult({ valid, detail }) {
             <Row label="Institusi penerbit">{detail.institutionName || "—"}</Row>
             <Row label="Status">{detail.isValid ? <Badge tone="success" dot>Aktif</Badge> : <Badge tone="danger" dot>Dicabut</Badge>}</Row>
             <Row label="Diterbitkan">{detail.issuedAt ? new Date(detail.issuedAt).toLocaleString("id-ID") : "—"}</Row>
-            {detail.fileUrl ? (
+            {fileUrl ? (
               <Row label="File sertifikat">
-                <a href={detail.fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-brand hover:underline">
-                  <FileText className="h-4 w-4" /> Buka file (IPFS)
+                <a href={fileUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-brand hover:underline">
+                  <FileText className="h-4 w-4" /> Buka PDF sertifikat
                 </a>
               </Row>
             ) : detail.fileAccess === "private" ? (

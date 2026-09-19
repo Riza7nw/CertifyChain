@@ -2,6 +2,7 @@ import { useState } from "react";
 import { FileText, Download, Loader2 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { useToast } from "./Toast";
+import { resolveFileUrl } from "../utils/certificateFiles";
 
 // Sel "File" untuk tabel sertifikat (Fase C3).
 //  - file uploaded (publik)  -> tautan langsung ke fileUrl.
@@ -11,11 +12,12 @@ export default function FileCell({ cert }) {
   const { apiBlob } = useAuth();
   const toast = useToast();
   const [busy, setBusy] = useState(false);
+  const fileUrl = resolveFileUrl(cert.fileUrl);
 
-  if (cert.fileUrl) {
+  if (fileUrl) {
     return (
       <a
-        href={cert.fileUrl}
+        href={fileUrl}
         target="_blank"
         rel="noreferrer"
         className="inline-flex text-brand hover:text-brand-hover"

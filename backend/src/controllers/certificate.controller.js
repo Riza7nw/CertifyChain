@@ -14,7 +14,7 @@ const { isPrivateCert } = require("../utils/certPrivacy");
 
 /**
  * POST /api/institutions/:id/certificates   (multipart/form-data, JWT admin)
- * Field: file (PDF/gambar), recipientName, data (opsional, metadata tambahan)
+ * Field: file (PDF), recipientName, data (opsional, metadata tambahan)
  *
  * Alur write-path scalable:
  *   1. unggah file -> IPFS (dapat fileCid)

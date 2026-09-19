@@ -15,6 +15,10 @@ function notFoundHandler(req, res, next) {
  */
 // eslint-disable-next-line no-unused-vars
 function errorHandler(err, req, res, next) {
+  if (res.headersSent) return next(err);
+  if (err.code === "LIMIT_FILE_SIZE") {
+    err = new AppError("Ukuran file melebihi batas yang diizinkan.", 413, "FILE_TOO_LARGE");
+  }
   const statusCode = err.statusCode || 500;
   const code = err.code || "INTERNAL_ERROR";
 

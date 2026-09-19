@@ -6,6 +6,7 @@ const db = require("../db");
 const asyncHandler = require("../utils/asyncHandler");
 const AppError = require("../utils/AppError");
 const { isPrivateCert } = require("../utils/certPrivacy");
+const { sendStoredFile, validateCid } = require("../services/fileDelivery");
 
 /**
  * POST /api/files  (multipart, JWT admin)
@@ -32,6 +33,7 @@ const uploadFile = asyncHandler(async (req, res) => {
  */
 const getFile = asyncHandler(async (req, res) => {
   const { cid } = req.params;
+  await validateCid(cid);
   if (typeof storage.getPath !== "function" || !storage.exists(cid)) {
     throw new AppError("File tidak tersedia di node ini.", 404, "FILE_NOT_FOUND");
   }
@@ -43,7 +45,7 @@ const getFile = asyncHandler(async (req, res) => {
       "FILE_PRIVATE"
     );
   }
-  res.sendFile(storage.getPath(cid));
+  return sendStoredFile(res, cid, { download: req.query.download === "1" });
 });
 
 module.exports = { uploadFile, getFile };

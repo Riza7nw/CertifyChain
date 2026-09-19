@@ -63,7 +63,7 @@ export default function MyCertificates() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `certificate-${certId.slice(0, 10)}`;
+      a.download = `certificate-${certId.slice(0, 10)}${blob.type === "application/pdf" ? ".pdf" : ""}`;
       document.body.appendChild(a);
       a.click();
       a.remove();

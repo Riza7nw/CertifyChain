@@ -9,7 +9,7 @@ const { issueLimiter } = require("../middlewares/rateLimit");
 
 const router = express.Router();
 
-// Upload file di memori, batasi 10MB (file sertifikat PDF/gambar).
+// Upload file di memori, batasi 10MB (isi PDF divalidasi certificate.service).
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
