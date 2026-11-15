@@ -9,24 +9,59 @@ const AppError = require("../utils/AppError");
 const abi = require(path.join(__dirname, "..", "abi", "CertifyChainMultiInstitution.json"));
 
 // --- Inisialisasi koneksi (sekali saat modul dimuat) ---
-const provider = new ethers.JsonRpcProvider(config.rpcUrl, config.chainId);
+// pollingInterval: seberapa sering ethers mengecek receipt saat `tx.wait()`.
+// Bawaan ethers 4000 ms -> di L2 (blok <1 detik) tiap penerbitan jadi menunggu
+// ~4 detik tanpa perlu. 500 ms membuat konfirmasi terasa instan.
+// staticNetwork: jaringan sudah pasti (CHAIN_ID), jadi ethers tidak perlu memanggil
+// eth_chainId berulang -> hemat satu round-trip RPC per transaksi.
+const provider = new ethers.JsonRpcProvider(config.rpcUrl, config.chainId, {
+  pollingInterval: parseInt(process.env.RPC_POLLING_INTERVAL_MS || "500", 10),
+  ...(config.chainId ? { staticNetwork: ethers.Network.from(config.chainId) } : {}),
+});
 const wallet = new ethers.Wallet(config.privateKey, provider);
 const contract = new ethers.Contract(config.contractAddress, abi, wallet);
 
 /** Menerjemahkan error kontrak/ethers menjadi AppError yang ramah client. */
+/**
+ * Nama custom error kontrak dari sebuah error ethers.
+ * Untuk transaksi TULIS, revert terjadi saat estimateGas dan ethers tidak
+ * men-decode-nya (`err.revert` kosong -> "unknown custom error"); data mentahnya
+ * tetap ada di `err.data`, jadi di-decode sendiri dengan ABI kontrak.
+ */
+function revertNameOf(err) {
+  if (err?.revert?.name) return err.revert.name;
+  const data = err?.data ?? err?.info?.error?.data;
+  if (typeof data === "string" && data.length >= 10) {
+    try {
+      return contract.interface.parseError(data)?.name || null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
 function normalizeBlockchainError(err) {
-  const revertName = err?.revert?.name;
+  const revertName = revertNameOf(err);
   switch (revertName) {
     case "CertificateNotFound":
       return new AppError("Sertifikat tidak ditemukan di blockchain.", 404, "CERT_NOT_FOUND");
     case "CertificateAlreadyExists":
       return new AppError("certificateId sudah pernah diterbitkan.", 409, "CERT_EXISTS");
     case "InstitutionNotFound":
-      return new AppError("Institusi tidak ditemukan.", 404, "INSTITUTION_NOT_FOUND");
+      return new AppError(
+        "Institusi organisasi ini belum terdaftar di jaringan blockchain yang aktif. Minta admin platform melakukan provision ulang.",
+        404,
+        "INSTITUTION_NOT_FOUND"
+      );
     case "InstitutionInactive":
       return new AppError("Institusi sedang nonaktif/di-suspend.", 403, "INSTITUTION_INACTIVE");
     case "NotIssuer":
-      return new AppError("Akun tidak memiliki hak issuer untuk institusi ini.", 403, "NOT_ISSUER");
+      return new AppError(
+        "Wallet backend bukan issuer institusi ini di jaringan blockchain yang aktif. Organisasi perlu di-provision ulang.",
+        403,
+        "NOT_ISSUER"
+      );
     case "AccessControlUnauthorizedAccount":
       return new AppError("Akun tidak memiliki role yang dibutuhkan di kontrak.", 403, "FORBIDDEN_ONCHAIN");
     case "EnforcedPause":
