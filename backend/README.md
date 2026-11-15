@@ -32,7 +32,7 @@ npm run dev              # mode development (auto-reload)
 npm start
 ```
 
-> ⚠️ Wallet di `PRIVATE_KEY` **harus owner kontrak**, kalau tidak `issue-certificate` akan ditolak (`NotOwner`). Wallet juga butuh saldo native (mis. Sepolia ETH) untuk bayar gas.
+> ⚠️ Wallet di `PRIVATE_KEY` **harus owner kontrak**, kalau tidak `issue-certificate` akan ditolak (`NotOwner`). Wallet juga butuh saldo native (mis. Arbitrum Sepolia ETH) untuk bayar gas.
 
 ## Endpoint
 

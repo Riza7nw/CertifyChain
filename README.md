@@ -32,8 +32,8 @@ certifychain/
 npm install
 npm test                       # hardhat test (tanpa perlu .env)
 
-# 2. Deploy ke Sepolia (butuh RPC_URL + PRIVATE_KEY; lihat .env.example)
-npx hardhat run scripts/deployV3.js --network sepolia
+# 2. Deploy ke Arbitrum Sepolia (butuh PRIVATE_KEY + saldo ETH Arbitrum Sepolia; lihat .env.example)
+npx hardhat run scripts/deployV3.js --network arbitrumSepolia
 
 # 3. Backend (lihat backend/.env.example)
 cd backend && npm install && npm run dev      # API

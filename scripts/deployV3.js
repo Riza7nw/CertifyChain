@@ -1,6 +1,7 @@
 // scripts/deployV3.js
 // Deploy CertifyChainMultiInstitution (V3). Jalankan:
-//   npx hardhat run scripts/deployV3.js --network sepolia
+//   npx hardhat run scripts/deployV3.js --network arbitrumSepolia   (jaringan aktif)
+//   npx hardhat run scripts/deployV3.js --network sepolia           (jaringan lama)
 
 const { ethers } = require("hardhat");
 

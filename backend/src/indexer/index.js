@@ -16,7 +16,23 @@ const db = require("../db");
 const config = require("../config");
 const { describeError, hintFromError } = require("../utils/describeError");
 
-const META_KEY = "indexer:lastBlock";
+// Posisi indexer disimpan PER jaringan + kontrak. Nomor blok tiap jaringan tidak
+// sebanding (Sepolia ~11 juta, Arbitrum Sepolia ratusan juta), jadi kunci bersama
+// akan membuat indexer men-scan jutaan blok kosong setelah ganti jaringan.
+const LEGACY_META_KEY = "indexer:lastBlock"; // kunci lama (hanya Sepolia)
+const SEPOLIA_CHAIN_ID = 11155111;
+const META_KEY = `indexer:lastBlock:${config.chainId || "default"}:${config.contractAddress.toLowerCase()}`;
+
+/** Blok terakhir yang sudah diproses untuk jaringan + kontrak aktif (0 = belum ada). */
+async function getLastBlock() {
+  const scoped = await db.meta.get(META_KEY);
+  if (scoped) return parseInt(scoped, 10);
+  // Lanjutkan progres lama bila masih di Sepolia, supaya tidak backfill ulang.
+  if (!config.chainId || config.chainId === SEPOLIA_CHAIN_ID) {
+    return parseInt((await db.meta.get(LEGACY_META_KEY)) || "0", 10);
+  }
+  return 0;
+}
 
 /** Jeda non-blocking (untuk throttle request agar ramah rate-limit). */
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -68,7 +84,7 @@ async function preflight() {
       `[indexer] Plan: mulai blok ${config.indexerStartBlock}, chunk ${config.indexerMaxBlockRange} blok/req, ` +
         `maks ${config.indexerMaxChunksPerCycle} chunk/siklus, jeda ${config.indexerRequestDelayMs}ms/request.`
     );
-    const lastSaved = parseInt((await db.meta.get(META_KEY)) || "0", 10);
+    const lastSaved = await getLastBlock();
     if (lastSaved === 0 && config.indexerStartBlock === 0 && block > 100000) {
       console.warn(
         `[indexer] PERINGATAN: INDEXER_START_BLOCK=0 sedangkan blok terbaru ${block}. ` +
@@ -167,7 +183,7 @@ async function sync() {
     throw err;
   }
 
-  const last = parseInt((await db.meta.get(META_KEY)) || "0", 10);
+  const last = await getLastBlock();
   // Mulai dari lastProcessed+1, atau dari blok deployment (indexerStartBlock).
   let cursor = last > 0 ? last + 1 : config.indexerStartBlock;
   if (cursor > latest) return;
