@@ -7,3 +7,6 @@ logs/
 secrets/
 *.p12
 .DS_Store
+
+# Cadangan env (berisi rahasia) - jangan pernah di-commit
+.env.*.bak

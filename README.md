@@ -22,8 +22,9 @@ certifychain/
 - **Backend:** Node + Express, ethers v6, node:sqlite (read-model), IPFS (multiformats), JWT + bcrypt
 - **Frontend:** Vite + React 18 + Tailwind, react-router, html5-qrcode
 
-## Kontrak ter-deploy (Sepolia)
-- `CertifyChainMultiInstitution`: **`0x1Ad005E16516AB7F5f3C3DF4751F86a890b8bBF3`** (chainId 11155111)
+## Kontrak ter-deploy
+- **Arbitrum Sepolia (aktif)** — `CertifyChainMultiInstitution`: **`0xf4F22FDc42ab2F256489B450C2F5D8A2aA7C9242`** (chainId 421614, blok deploy 329468013)
+- Ethereum Sepolia (lama, tidak dipakai lagi): `0x1Ad005E16516AB7F5f3C3DF4751F86a890b8bBF3` (chainId 11155111)
 
 ## Menjalankan (development)
 
